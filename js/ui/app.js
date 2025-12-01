@@ -477,6 +477,15 @@ function handleGenerateClick() {
 }
 
 function handleLiveInput() {
+  // keep the panel open while typing
+  if (autoMinimizeTimeout) {
+    clearTimeout(autoMinimizeTimeout);
+    autoMinimizeTimeout = null;
+  }
+  if (panelEl) {
+    panelEl.classList.remove("minimized");
+  }
+
   updateStatsHint();
   const paletteMode = paletteModeEl.value || "auto";
 
@@ -487,6 +496,7 @@ function handleLiveInput() {
     handleLiveTextChange(value, paletteMode);
   }, 140);
 }
+
 
 function downloadSVG() {
   if (!lastSVGString) {
