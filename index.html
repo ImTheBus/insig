@@ -1,0 +1,1049 @@
+<!-- /index.html - created 2025-12-01 01:30 (Europe/London) -->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Glyphseed – Insignia Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- /index.html - 2025-12-01 01:30 (Europe/London) -->
+
+  <style>
+    :root {
+      --bg: #020311;
+      --panel-bg: #050816;
+      --panel-border: #1f2937;
+      --accent: #4ade80;
+      --accent-soft: #22c55e;
+      --accent-cyan: #38bdf8;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --danger: #f97373;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+      background:
+        radial-gradient(circle at top, #020617 0, #000 70%) fixed,
+        radial-gradient(circle at bottom, #020617 0, #000 60%) fixed;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      padding: 16px;
+    }
+
+    .app-shell {
+      max-width: 1240px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    header.site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-inline: 4px;
+      gap: 12px;
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .brand-mark {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(56,189,248,0.8), transparent 60%),
+        radial-gradient(circle at 70% 80%, rgba(74,222,128,0.8), transparent 60%);
+      box-shadow:
+        0 0 0 2px rgba(15,23,42,0.8),
+        0 0 12px rgba(56,189,248,0.8);
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    .brand-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+
+    .header-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .header-tag {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      padding: 3px 10px;
+      background: rgba(15,23,42,0.75);
+    }
+
+    main.app {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.3fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 10px;
+      }
+      main.app {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      header.site-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    .panel {
+      background: radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 80%, #000 100%);
+      border-radius: 18px;
+      border: 1px solid var(--panel-border);
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,0.9),
+        0 18px 36px rgba(0,0,0,0.8);
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0 0, rgba(56,189,248,0.13) 0, transparent 55%),
+        radial-gradient(circle at 100% 0, rgba(52,211,153,0.08) 0, transparent 50%);
+      pointer-events: none;
+      opacity: 0.75;
+    }
+
+    .panel-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .panel-heading {
+      font-size: 1.3rem;
+      margin: 0 0 6px;
+    }
+
+    .panel-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      max-width: 32rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      resize: vertical;
+      border-radius: 12px;
+      border: 1px solid #111827;
+      background:
+        radial-gradient(circle at top left, #020617 0, #020617 40%, #030712 100%);
+      color: var(--text-main);
+      padding: 11px 12px;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      outline: none;
+      box-shadow: inset 0 0 0 1px rgba(15,23,42,0.85);
+    }
+
+    textarea:focus {
+      border-color: var(--accent-soft);
+      box-shadow:
+        0 0 0 1px rgba(34,197,94,0.6),
+        0 0 0 6px rgba(34,197,94,0.2);
+    }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 16px;
+      margin-bottom: 4px;
+    }
+
+    .spacer {
+      flex: 1 1 auto;
+    }
+
+    .info-pill {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      padding: 4px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15,23,42,0.7);
+      backdrop-filter: blur(10px);
+    }
+
+    .info-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      box-shadow: 0 0 6px rgba(34,197,94,0.9);
+    }
+
+    .button {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.45);
+      background: radial-gradient(circle at top left, #1e293b 0, #020617 55%, #020617 100%);
+      padding: 7px 14px;
+      color: var(--text-main);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition:
+        transform 80ms ease-out,
+        box-shadow 80ms ease-out,
+        border-color 80ms ease-out,
+        background 80ms ease-out;
+      white-space: nowrap;
+    }
+
+    .button-primary {
+      border-color: rgba(74,222,128,0.9);
+      background:
+        radial-gradient(circle at 0 0, rgba(74,222,128,0.35) 0, transparent 40%),
+        linear-gradient(to right, #16a34a, #22c55e, #22c55e);
+      box-shadow:
+        0 0 0 1px rgba(21,128,61,0.7),
+        0 8px 22px rgba(34,197,94,0.55);
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 0 0 1px rgba(148,163,184,0.45),
+        0 12px 26px rgba(15,23,42,0.8);
+    }
+
+    .button-primary:hover {
+      box-shadow:
+        0 0 0 1px rgba(22,163,74,0.9),
+        0 14px 32px rgba(34,197,94,0.75);
+    }
+
+    .button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .button-icon {
+      font-size: 0.9rem;
+    }
+
+    select {
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid #111827;
+      color: var(--text-main);
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--accent-soft);
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.35);
+    }
+
+    .export-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .export-row .button {
+      font-size: 0.72rem;
+      padding-inline: 11px;
+    }
+
+    .status {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      min-height: 1.1em;
+    }
+
+    .status-error {
+      color: var(--danger);
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .preview-label {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.75rem;
+    }
+
+    .preview-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.75rem;
+    }
+
+    .meta-pill {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      padding: 3px 9px;
+      background: rgba(15,23,42,0.8);
+    }
+
+    .preview-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,0.9);
+      background:
+        radial-gradient(circle at 50% -10%, #020617 0, #000 65%);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .preview-inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      position: relative;
+    }
+
+    #insignia-host {
+      width: 100%;
+      height: 100%;
+    }
+
+    .preview-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+      opacity: 0.55;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(148,163,184,0.26) 0, transparent 55%),
+        radial-gradient(circle at 85% 80%, rgba(56,189,248,0.18) 0, transparent 55%);
+    }
+
+    footer.site-footer {
+      margin-top: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      padding-inline: 4px;
+      gap: 8px;
+    }
+
+    .footer-right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .footer-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px rgba(56,189,248,0.9);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <div class="brand-title">Glyphseed</div>
+          <div class="brand-sub">Insignia generator</div>
+        </div>
+      </div>
+      <div class="header-meta">
+        <span class="header-tag">Client side only</span>
+        <span>Deterministic seeds</span>
+      </div>
+    </header>
+
+    <main class="app">
+      <section class="panel" aria-label="Insignia controls">
+        <div class="panel-inner">
+          <div class="panel-title">Input</div>
+          <h1 class="panel-heading">Describe your mark in text</h1>
+          <p class="panel-subtitle">
+            Paste a phrase, a name, or an entire paragraph. Glyphseed hashes your text into a seed
+            and grows a single insignia from it. The same text always recreates the same piece.
+          </p>
+
+          <label for="input-text">Text source</label>
+          <textarea id="input-text" spellcheck="false"
+            placeholder="Type or paste anything that feels like it belongs inside the symbol you want."></textarea>
+          <div class="hint" id="text-hint">
+            0 characters • 0 vowels • 0 consonants • 0 digits • 0 symbols
+          </div>
+
+          <div class="controls-row">
+            <button class="button button-primary" id="generate-btn">
+              <span class="button-icon">✦</span>
+              <span>Grow insignia</span>
+            </button>
+
+            <div class="spacer"></div>
+
+            <div class="info-pill" id="seed-pill">
+              <span class="info-dot"></span>
+              <span>Seed: none</span>
+            </div>
+          </div>
+
+          <div class="controls-row" style="margin-top: 8px;">
+            <span style="font-size:0.78rem;color:var(--text-muted);">Export size</span>
+            <select id="export-size">
+              <option value="1024">1024 × 1024</option>
+              <option value="2048">2048 × 2048</option>
+            </select>
+          </div>
+
+          <div class="export-row">
+            <button class="button" id="download-svg-btn">
+              <span class="button-icon">⬇</span>
+              <span>Download SVG</span>
+            </button>
+            <button class="button" id="download-png-btn">
+              <span class="button-icon">⬇</span>
+              <span>Download PNG</span>
+            </button>
+          </div>
+
+          <div class="status" id="status-line"></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Insignia preview">
+        <div class="panel-inner">
+          <div class="preview-header">
+            <div class="preview-label">Generated insignia</div>
+            <div class="preview-meta" id="preview-meta">
+              <div class="meta-pill">Layout: none</div>
+              <div class="meta-pill">Symmetry: none</div>
+            </div>
+          </div>
+          <div class="preview-wrap">
+            <div class="preview-inner">
+              <div id="insignia-host"></div>
+              <div class="preview-overlay"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Glyphseed prototype · v0.1 · 2025-12-01</span>
+      <div class="footer-right">
+        <span class="footer-dot"></span>
+        <span>Local only • no text is sent anywhere</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- /index.html script block - 2025-12-01 01:30 (Europe/London) -->
+  <script>
+    // Simple FNV-like hash to turn text into a 32 bit seed.
+    function hashString(str) {
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+
+    // xorshift32 seeded pseudo random generator.
+    function makeRNG(seed) {
+      let s = seed || 1;
+      return function rand() {
+        s ^= s << 13; s >>>= 0;
+        s ^= s >> 17; s >>>= 0;
+        s ^= s << 5;  s >>>= 0;
+        return (s >>> 0) / 4294967296;
+      };
+    }
+
+    function analyseText(text) {
+      const vowelsMatch = text.match(/[aeiouAEIOU]/g) || [];
+      const consonantsMatch = text.match(/[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]/g) || [];
+      const digitsMatch = text.match(/\d/g) || [];
+      const symbolsMatch = text.match(/[^\w\s]/g) || [];
+      return {
+        length: text.length,
+        vowels: vowelsMatch.length,
+        consonants: consonantsMatch.length,
+        digits: digitsMatch.length,
+        symbols: symbolsMatch.length
+      };
+    }
+
+    function buildParamsFromText(text) {
+      const stats = analyseText(text);
+      const seed = text.length ? hashString(text) : hashString("empty");
+      const rand = makeRNG(seed);
+
+      const length = Math.max(stats.length, 1);
+      const vowelRatio = stats.vowels / length;
+      const digitRatio = stats.digits / length;
+
+      const layoutMode = Math.floor(rand() * 4); // 0..3
+      const symmetryOpts = [2, 4, 6];
+      const symmetry = symmetryOpts[Math.floor(rand() * symmetryOpts.length)];
+
+      const detailLevel = Math.min(1 + length / 20, 8);
+      const curveBias = vowelRatio;
+      const structureLevel = digitRatio;
+      const accentLevel = Math.min(stats.symbols, 15);
+
+      const baseHue = Math.floor(rand() * 360);
+      const palette = buildPalette(baseHue, rand);
+
+      return {
+        seed,
+        stats,
+        layoutMode,
+        symmetry,
+        detailLevel,
+        curveBias,
+        structureLevel,
+        accentLevel,
+        palette
+      };
+    }
+
+    function hsl(h, s, l, a) {
+      if (typeof a === "number") {
+        return "hsla(" + h + "," + s + "%," + l + "%," + a + ")";
+      }
+      return "hsl(" + h + "," + s + "%," + l + "%)";
+    }
+
+    function buildPalette(baseHue, rand) {
+      const bgHue = (baseHue + 210 + Math.floor(rand() * 40) - 20) % 360;
+      const accentHue = (baseHue + 40 + Math.floor(rand() * 40) - 20) % 360;
+      const highlightHue = (baseHue + 120 + Math.floor(rand() * 40) - 20) % 360;
+
+      return {
+        backgroundInner: hsl(bgHue, 35, 8),
+        backgroundOuter: hsl(bgHue, 65, 2),
+        main1: hsl(accentHue, 85, 58),
+        main2: hsl((accentHue + 30) % 360, 70, 62),
+        main3: hsl((accentHue + 320) % 360, 60, 55),
+        subtle: hsl((highlightHue + 40) % 360, 65, 60),
+        highlight: hsl(highlightHue, 80, 75)
+      };
+    }
+
+    function buildScene(params, rand) {
+      const elements = [];
+
+      elements.push({
+        type: "defs",
+        radialGradient: {
+          id: "bgGradient",
+          cx: "50%",
+          cy: "50%",
+          r: "65%",
+          fx: "50%",
+          fy: "38%",
+          stops: [
+            { offset: "0%", color: params.palette.backgroundInner, opacity: 1 },
+            { offset: "100%", color: params.palette.backgroundOuter, opacity: 1 }
+          ]
+        },
+        blurFilter: {
+          id: "softBlur",
+          stdDeviation: 12
+        }
+      });
+
+      const symmetry = params.symmetry;
+      const maxElements = 160;
+      let usedElements = 0;
+
+      const radiusBase = 120;
+      const radiusMax = 460;
+
+      const baseRingCount = 3 + Math.floor(params.detailLevel);
+      const extraRings = Math.floor(params.structureLevel * 4);
+      const ringCount = Math.min(baseRingCount + extraRings, 10);
+
+      for (let i = 0; i < ringCount; i++) {
+        if (usedElements >= maxElements) break;
+
+        const t = i / Math.max(ringCount - 1, 1);
+        const radius = radiusBase + t * (radiusMax - radiusBase);
+        const thickness = 6 + (1 - t) * 14 / symmetry;
+        const opacity = 0.15 + 0.35 * (1 - t);
+
+        const ringColor = i % 2 === 0 ? params.palette.main1 : params.palette.main2;
+
+        elements.push({
+          type: "ring",
+          cx: 500,
+          cy: 500,
+          r: radius,
+          stroke: ringColor,
+          strokeWidth: thickness,
+          opacity: opacity,
+          blur: i % 3 === 0 && i > 0
+        });
+
+        usedElements++;
+      }
+
+      const spokeDensity = 10 + Math.floor(params.detailLevel * 4);
+      const spokeCount = Math.min(spokeDensity * symmetry, 120);
+      const spokeBaseLen = 60 + params.detailLevel * 12;
+      const spokeJitter = 30 + params.detailLevel * 8;
+
+      for (let i = 0; i < spokeCount; i++) {
+        if (usedElements >= maxElements) break;
+        const t = i / spokeCount;
+        const angle = t * Math.PI * 2;
+
+        const len = spokeBaseLen + (rand() - 0.5) * spokeJitter;
+        const innerR = radiusBase - 20;
+        const outerR = innerR + len;
+
+        const x1 = 500 + innerR * Math.cos(angle);
+        const y1 = 500 + innerR * Math.sin(angle);
+        const x2 = 500 + outerR * Math.cos(angle);
+        const y2 = 500 + outerR * Math.sin(angle);
+
+        const weight = 1.2 + rand() * 2.5;
+        const opacity = 0.12 + 0.28 * (1 - params.curveBias);
+
+        elements.push({
+          type: "line",
+          x1, y1, x2, y2,
+          stroke: params.palette.subtle,
+          strokeWidth: weight,
+          opacity: opacity
+        });
+
+        usedElements++;
+
+        if (rand() < 0.35 && usedElements < maxElements) {
+          const orbR = outerR + 18 + rand() * 24;
+          const ox = 500 + orbR * Math.cos(angle);
+          const oy = 500 + orbR * Math.sin(angle);
+          const oSize = 3 + rand() * 5;
+
+          elements.push({
+            type: "circle",
+            cx: ox,
+            cy: oy,
+            r: oSize,
+            fill: params.palette.highlight,
+            opacity: 0.75
+          });
+          usedElements++;
+        }
+      }
+
+      const curveGroups = 2 + Math.floor(params.curveBias * 4);
+      for (let g = 0; g < curveGroups; g++) {
+        if (usedElements >= maxElements) break;
+
+        const baseAngle = rand() * Math.PI * 2;
+        const bandRadius = radiusBase + 40 + rand() * (radiusMax - radiusBase - 100);
+        const bandWidth = 20 + rand() * 40;
+
+        const segments = 60;
+        const pathParts = [];
+        for (let i = 0; i <= segments; i++) {
+          const tt = i / segments;
+          const ang = baseAngle + (tt - 0.5) * (Math.PI * 1.6);
+          const wobble = Math.sin(tt * Math.PI * 4 + g) * 14 * params.curveBias;
+          const r = bandRadius + wobble;
+          const x = 500 + r * Math.cos(ang);
+          const y = 500 + r * Math.sin(ang);
+          pathParts.push((i === 0 ? "M " : "L ") + x.toFixed(2) + " " + y.toFixed(2));
+        }
+
+        elements.push({
+          type: "path",
+          d: pathParts.join(" "),
+          stroke: params.palette.main3,
+          strokeWidth: bandWidth / 10,
+          opacity: 0.18 + 0.15 * params.curveBias,
+          fill: "none"
+        });
+        usedElements++;
+      }
+
+      const accentCount = Math.min(params.accentLevel * 3, 40);
+      for (let i = 0; i < accentCount; i++) {
+        if (usedElements >= maxElements) break;
+        const ringT = rand();
+        const r = radiusBase + 30 + ringT * (radiusMax - radiusBase - 60);
+        const angle = rand() * Math.PI * 2;
+        const size = 6 + rand() * 18;
+        const rotation = rand() * Math.PI * 2;
+
+        const cx = 500 + r * Math.cos(angle);
+        const cy = 500 + r * Math.sin(angle);
+
+        const points = [];
+        for (let k = 0; k < 3; k++) {
+          const ang = rotation + k * (Math.PI * 2 / 3);
+          const px = cx + size * Math.cos(ang);
+          const py = cy + size * Math.sin(ang);
+          points.push(px.toFixed(2) + "," + py.toFixed(2));
+        }
+
+        elements.push({
+          type: "polygon",
+          points: points.join(" "),
+          fill: params.palette.highlight,
+          opacity: 0.55
+        });
+        usedElements++;
+      }
+
+      elements.push({
+        type: "circle",
+        cx: 500,
+        cy: 500,
+        r: 82,
+        fill: "url(#bgGradient)",
+        opacity: 0.9,
+        blur: true
+      });
+
+      elements.push({
+        type: "circle",
+        cx: 500,
+        cy: 500,
+        r: 72,
+        stroke: params.palette.main1,
+        strokeWidth: 3.2,
+        fill: "none",
+        opacity: 0.9
+      });
+
+      elements.push({
+        type: "circle",
+        cx: 500,
+        cy: 500,
+        r: 56,
+        stroke: params.palette.main2,
+        strokeWidth: 2,
+        fill: "none",
+        opacity: 0.9
+      });
+
+      const innerPoints = [];
+      const innerSides = [4, 5, 6, 8][params.layoutMode];
+      const innerRadius = 34;
+      const innerRotation = Math.PI / innerSides;
+
+      for (let i = 0; i < innerSides; i++) {
+        const ang = innerRotation + i * (Math.PI * 2 / innerSides);
+        const x = 500 + innerRadius * Math.cos(ang);
+        const y = 500 + innerRadius * Math.sin(ang);
+        innerPoints.push(x.toFixed(2) + "," + y.toFixed(2));
+      }
+
+      elements.push({
+        type: "polygon",
+        points: innerPoints.join(" "),
+        fill: params.palette.subtle,
+        opacity: 0.95
+      });
+
+      elements.push({
+        type: "circle",
+        cx: 500,
+        cy: 500,
+        r: 8 + params.curveBias * 12,
+        fill: params.palette.highlight,
+        opacity: 0.95
+      });
+
+      return elements;
+    }
+
+    function sceneToSVGString(elements, palette) {
+      const viewBox = "0 0 1000 1000";
+
+      let defs = "";
+      let body = "";
+
+      for (const el of elements) {
+        if (el.type === "defs") {
+          if (el.radialGradient) {
+            const g = el.radialGradient;
+            defs += [
+              '<radialGradient id="' + g.id + '" cx="' + g.cx + '" cy="' + g.cy + '" r="' + g.r + '" fx="' + g.fx + '" fy="' + g.fy + '">',
+              g.stops.map(st => '<stop offset="' + st.offset + '" stop-color="' + st.color + '" stop-opacity="' + st.opacity + '"></stop>').join(""),
+              '</radialGradient>'
+            ].join("");
+          }
+          if (el.blurFilter) {
+            const f = el.blurFilter;
+            defs += '<filter id="' + f.id + '" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="' + f.stdDeviation + '"></feGaussianBlur></filter>';
+          }
+          continue;
+        }
+
+        if (el.type === "ring") {
+          const filterAttr = el.blur ? ' filter="url(#softBlur)"' : "";
+          body += '<circle cx="' + el.cx + '" cy="' + el.cy + '" r="' + el.r + '" stroke="' + el.stroke + '" stroke-width="' + el.strokeWidth + '" fill="none" opacity="' + el.opacity + '"' + filterAttr + '></circle>';
+        } else if (el.type === "line") {
+          body += '<line x1="' + el.x1 + '" y1="' + el.y1 + '" x2="' + el.x2 + '" y2="' + el.y2 + '" stroke="' + el.stroke + '" stroke-width="' + el.strokeWidth + '" stroke-linecap="round" opacity="' + el.opacity + '"></line>';
+        } else if (el.type === "circle") {
+          const filterAttr = el.blur ? ' filter="url(#softBlur)"' : "";
+          body += '<circle cx="' + el.cx + '" cy="' + el.cy + '" r="' + el.r + '" fill="' + el.fill + '" opacity="' + el.opacity + '"' + filterAttr + '></circle>';
+        } else if (el.type === "path") {
+          body += '<path d="' + el.d + '" stroke="' + el.stroke + '" stroke-width="' + el.strokeWidth + '" fill="' + (el.fill || "none") + '" opacity="' + el.opacity + '" stroke-linecap="round" stroke-linejoin="round"></path>';
+        } else if (el.type === "polygon") {
+          body += '<polygon points="' + el.points + '" fill="' + el.fill + '" opacity="' + el.opacity + '"></polygon>';
+        }
+      }
+
+      const svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + viewBox + '" width="1000" height="1000">',
+        '<defs>',
+        defs,
+        '</defs>',
+        '<rect x="0" y="0" width="100%" height="100%" fill="url(#bgGradient)"></rect>',
+        body,
+        '</svg>'
+      ].join("");
+
+      return svg;
+    }
+
+    const inputEl = document.getElementById("input-text");
+    const hintEl = document.getElementById("text-hint");
+    const generateBtn = document.getElementById("generate-btn");
+    const hostEl = document.getElementById("insignia-host");
+    const statusEl = document.getElementById("status-line");
+    const seedPill = document.getElementById("seed-pill");
+    const previewMeta = document.getElementById("preview-meta");
+    const exportSizeEl = document.getElementById("export-size");
+    const downloadSvgBtn = document.getElementById("download-svg-btn");
+    const downloadPngBtn = document.getElementById("download-png-btn");
+
+    let lastSVGString = "";
+    let lastParams = null;
+
+    function updateStatsHint() {
+      const text = inputEl.value;
+      const stats = analyseText(text);
+      hintEl.textContent =
+        stats.length + " characters • " +
+        stats.vowels + " vowels • " +
+        stats.consonants + " consonants • " +
+        stats.digits + " digits • " +
+        stats.symbols + " symbols";
+    }
+
+    inputEl.addEventListener("input", updateStatsHint);
+
+    function layoutLabel(mode) {
+      const labels = [
+        "Radial crest",
+        "Orbital emblem",
+        "Layered totem",
+        "Shield pattern"
+      ];
+      return labels[mode] || "Unknown";
+    }
+
+    function generateInsignia() {
+      const text = inputEl.value.trim();
+      if (!text) {
+        statusEl.textContent = "Enter some text first to grow an insignia.";
+        statusEl.classList.add("status-error");
+        return;
+      }
+      statusEl.classList.remove("status-error");
+      statusEl.textContent = "Generating...";
+
+      const params = buildParamsFromText(text);
+      const rand = makeRNG(params.seed);
+      const scene = buildScene(params, rand);
+      const svgString = sceneToSVGString(scene, params.palette);
+
+      hostEl.innerHTML = svgString;
+      lastSVGString = svgString;
+      lastParams = params;
+
+      const seedHex = "0x" + params.seed.toString(16).padStart(8, "0");
+      seedPill.querySelector("span:nth-child(2)").textContent = "Seed: " + seedHex;
+
+      previewMeta.innerHTML =
+        '<div class="meta-pill">Layout: ' + layoutLabel(params.layoutMode) + '</div>' +
+        '<div class="meta-pill">Symmetry: ' + params.symmetry + " fold</div>" +
+        '<div class="meta-pill">Detail: ' + params.detailLevel.toFixed(1) + "</div>";
+
+      statusEl.textContent = "Insignia generated. Use the export controls to save it.";
+    }
+
+    generateBtn.addEventListener("click", generateInsignia);
+
+    function downloadSVG() {
+      if (!lastSVGString) {
+        statusEl.textContent = "Generate an insignia before exporting.";
+        statusEl.classList.add("status-error");
+        return;
+      }
+      statusEl.classList.remove("status-error");
+
+      const blob = new Blob([lastSVGString], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const nameSeed = lastParams ? lastParams.seed.toString(16).padStart(8, "0") : "insignia";
+      a.download = "glyphseed-" + nameSeed + ".svg";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      statusEl.textContent = "SVG downloaded.";
+    }
+
+    function downloadPNG() {
+      if (!lastSVGString) {
+        statusEl.textContent = "Generate an insignia before exporting.";
+        statusEl.classList.add("status-error");
+        return;
+      }
+      statusEl.classList.remove("status-error");
+      statusEl.textContent = "Rendering PNG...";
+
+      const size = parseInt(exportSizeEl.value, 10) || 1024;
+      const svgBlob = new Blob([lastSVGString], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, size, size);
+        URL.revokeObjectURL(url);
+
+        canvas.toBlob(function (blob) {
+          const pngUrl = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = pngUrl;
+          const nameSeed = lastParams ? lastParams.seed.toString(16).padStart(8, "0") : "insignia";
+          a.download = "glyphseed-" + nameSeed + "-" + size + ".png";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(pngUrl);
+          statusEl.textContent = "PNG downloaded at " + size + " × " + size + ".";
+        }, "image/png");
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        statusEl.textContent = "Could not render PNG from SVG.";
+        statusEl.classList.add("status-error");
+      };
+      img.src = url;
+    }
+
+    downloadSvgBtn.addEventListener("click", downloadSVG);
+    downloadPngBtn.addEventListener("click", downloadPNG);
+
+    updateStatsHint();
+  </script>
+</html>
+
