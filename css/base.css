@@ -1,0 +1,125 @@
+/* /css/base.css */
+/* version: 2025-12-01 v0.2 */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #f9fafb;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at top, #1e1b4b 0, #020617 45%, #000 100%);
+  background-size: 220% 220%;
+  animation: galaxyDrift 40s ease-in-out infinite alternate;
+  position: relative;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: -40%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.32;
+  background:
+    radial-gradient(circle at 10% 15%, rgba(129,140,248,0.9) 0, transparent 55%),
+    radial-gradient(circle at 80% 35%, rgba(244,114,182,0.9) 0, transparent 55%),
+    radial-gradient(circle at 40% 80%, rgba(251,191,36,0.8) 0, transparent 60%);
+  filter: blur(8px);
+  z-index: -1;
+  animation: nebulaShift 60s linear infinite;
+}
+
+body::after {
+  opacity: 0.24;
+  mix-blend-mode: soft-light;
+  filter: blur(18px);
+  animation-duration: 90s;
+  animation-direction: alternate-reverse;
+}
+
+.stars-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 20% 25%, rgba(248,250,252,0.9), transparent),
+    radial-gradient(1px 1px at 60% 30%, rgba(248,250,252,0.7), transparent),
+    radial-gradient(1px 1px at 80% 70%, rgba(248,250,252,0.9), transparent),
+    radial-gradient(1px 1px at 35% 80%, rgba(248,250,252,0.6), transparent),
+    radial-gradient(1px 1px at 10% 70%, rgba(248,250,252,0.5), transparent);
+  opacity: 0.55;
+  animation: starTwinkle 14s ease-in-out infinite alternate;
+  z-index: -1;
+}
+
+.page {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+@keyframes galaxyDrift {
+  0% {
+    background-position: 10% 0%;
+  }
+  50% {
+    background-position: 50% 60%;
+  }
+  100% {
+    background-position: 90% 20%;
+  }
+}
+
+@keyframes nebulaShift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-2%, 3%, 0) scale(1.05);
+  }
+  100% {
+    transform: translate3d(3%, -4%, 0) scale(1.02);
+  }
+}
+
+@keyframes starTwinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.02);
+  }
+}
+
+/* Preloader breathing */
+@keyframes glyphseedBreathe {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.94;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
