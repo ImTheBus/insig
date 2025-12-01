@@ -1,0 +1,15 @@
+/* /css/insignia.css */
+/* version: 2025-12-01 v0.2 */
+
+/* Organic reveal of each piece */
+.insig-piece {
+  opacity: 0;
+  transform-origin: 50% 50%;
+  transform: scale(0.96);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.insig-piece.visible {
+  opacity: 1;
+  transform: scale(1);
+}
