@@ -1,5 +1,5 @@
 <!-- /index.html -->
-<!-- version: 2025-12-01 v0.2 -->
+<!-- version: 2025-12-01 v0.3 -->
 
 <!doctype html>
 <html lang="en">
@@ -35,9 +35,11 @@
       </div>
 
       <div class="cp-body">
-        <label for="input-text">Text source</label>
-        <textarea id="input-text" spellcheck="false"
-          placeholder="Paste a name, a sentence, or an entire paragraph. This text becomes the seed for your insignia."></textarea>
+        <label for="input-text" class="visually-hidden">Text source</label>
+        <div class="text-shell">
+          <textarea id="input-text" spellcheck="false"
+            placeholder="Type to grow..."></textarea>
+        </div>
         <div class="hint" id="text-hint">
           0 characters • 0 vowels • 0 consonants • 0 digits • 0 symbols
         </div>
