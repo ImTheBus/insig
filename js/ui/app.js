@@ -1,5 +1,5 @@
 // /js/ui/app.js
-// version: 2025-12-01 v0.3
+// version: 2025-12-01 v0.4
 
 import { buildParamsFromText, makeRNG } from "../engine/text-seed.js";
 import { buildScene } from "../engine/scene-builder.js";
@@ -37,6 +37,8 @@ const liveState = {
   elements: [],
   charElements: [] // array of arrays of element ids per character index
 };
+
+// ---- helpers ------------------------------------------------
 
 function analyseTextLocal(text) {
   return {
@@ -103,6 +105,8 @@ function clearLiveState() {
   liveState.charElements = [];
 }
 
+// ---- core render from whole text ----------------------------
+
 function renderFromText(text, paletteMode, options = {}) {
   if (!text) {
     hostEl.classList.add("empty");
@@ -127,7 +131,6 @@ function renderFromText(text, paletteMode, options = {}) {
     pieceStagger: options.pieceStagger || 30
   };
 
-  // full organic render, not diff
   import("../render/svg-renderer.js").then(({ renderSceneOrganic }) => {
     renderSceneOrganic(hostEl, scene, renderOpts);
   });
@@ -149,7 +152,7 @@ function renderFromText(text, paletteMode, options = {}) {
   liveState.charElements = Array.from({ length: text.length }, () => []);
 }
 
-// character rule helpers
+// ---- character rules for incremental growth -----------------
 
 let liveIdCounter = 0;
 function liveId(prefix, index, k) {
@@ -307,7 +310,7 @@ function applyCharRule(ch, index, paramsBase) {
   return { elements: newEls, ids };
 }
 
-// live typing handler
+// ---- live typing handler ------------------------------------
 
 function handleLiveTextChange(newTextRaw, paletteMode) {
   if (!liveMode) return;
@@ -388,4 +391,144 @@ function handleLiveTextChange(newTextRaw, paletteMode) {
     return;
   }
 
-  // more compl
+  // more complex edits (paste, mid-string change): rebuild
+  setStatus("Re-growing...");
+  renderFromText(trimmed, paletteMode, { totalDuration: 2000, pieceStagger: 25 });
+}
+
+// ---- button and input handlers ------------------------------
+
+function handleGenerateClick() {
+  const text = inputEl.value.trim();
+  if (!text) {
+    setStatus("Add some text first to grow an insignia.", true);
+    return;
+  }
+  setStatus("Growing...");
+  const paletteMode = paletteModeEl.value || "auto";
+  renderFromText(text, paletteMode, { totalDuration: 3000, pieceStagger: 30 });
+}
+
+function handleLiveInput() {
+  updateStatsHint();
+  const paletteMode = paletteModeEl.value || "auto";
+
+  if (liveTimer) clearTimeout(liveTimer);
+  const value = inputEl.value;
+
+  liveTimer = setTimeout(() => {
+    handleLiveTextChange(value, paletteMode);
+  }, 140);
+}
+
+function downloadSVG() {
+  if (!lastSVGString) {
+    setStatus("Generate an insignia before exporting.", true);
+    return;
+  }
+  setStatus("");
+
+  const blob = new Blob([lastSVGString], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const nameSeed = lastParams ? lastParams.seed.toString(16).padStart(8, "0") : "insignia";
+  a.href = url;
+  a.download = `glyphseed-${nameSeed}.svg`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  setStatus("SVG downloaded.");
+}
+
+function downloadPNG() {
+  if (!lastSVGString) {
+    setStatus("Generate an insignia before exporting.", true);
+    return;
+  }
+  setStatus("Rendering PNG...");
+
+  const size = parseInt(exportSizeEl.value, 10) || 1024;
+  const svgBlob = new Blob([lastSVGString], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(svgBlob);
+  const img = new Image();
+
+  img.onload = function () {
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, size, size);
+    URL.revokeObjectURL(url);
+
+    canvas.toBlob(blob => {
+      const pngUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const nameSeed = lastParams ? lastParams.seed.toString(16).padStart(8, "0") : "insignia";
+      a.href = pngUrl;
+      a.download = `glyphseed-${nameSeed}-${size}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(pngUrl);
+      setStatus(`PNG downloaded at ${size} × ${size}.`);
+    }, "image/png");
+  };
+
+  img.onerror = function () {
+    URL.revokeObjectURL(url);
+    setStatus("Could not render PNG from SVG.", true);
+  };
+
+  img.src = url;
+}
+
+// ---- DOM wiring ---------------------------------------------
+
+function initDomRefs() {
+  inputEl = document.getElementById("input-text");
+  hintEl = document.getElementById("text-hint");
+  generateBtn = document.getElementById("generate-btn");
+  hostEl = document.getElementById("insignia-host");
+  statusEl = document.getElementById("status-line");
+  seedPill = document.getElementById("seed-pill");
+  exportSizeEl = document.getElementById("export-size");
+  downloadSvgBtn = document.getElementById("download-svg-btn");
+  downloadPngBtn = document.getElementById("download-png-btn");
+  paletteModeEl = document.getElementById("palette-mode");
+  metaRowEl = document.getElementById("meta-row");
+  panelEl = document.getElementById("control-panel");
+  panelToggle = document.getElementById("panel-toggle");
+}
+
+function bindEvents() {
+  inputEl.addEventListener("input", handleLiveInput);
+  generateBtn.addEventListener("click", handleGenerateClick);
+  downloadSvgBtn.addEventListener("click", downloadSVG);
+  downloadPngBtn.addEventListener("click", downloadPNG);
+
+  panelToggle.addEventListener("click", () => {
+    if (panelEl.classList.contains("minimized")) {
+      panelEl.classList.remove("minimized");
+      if (autoMinimizeTimeout) {
+        clearTimeout(autoMinimizeTimeout);
+        autoMinimizeTimeout = null;
+      }
+    } else {
+      panelEl.classList.add("minimized");
+    }
+  });
+
+  updateStatsHint();
+}
+
+// ---- bootstrap ----------------------------------------------
+
+async function bootstrap() {
+  await runPreloader(document.body);
+  initDomRefs();
+  bindEvents();
+}
+
+document.addEventListener("DOMContentLoaded", bootstrap);
