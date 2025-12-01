@@ -1,4 +1,5 @@
-<!-- /index.html - created 2025-12-01 01:30 (Europe/London) -->
+
+<!-- /index.html - updated 2025-12-01 01:52 (Europe/London) -->
 
 <!doctype html>
 <html lang="en">
@@ -7,7 +8,7 @@
   <title>Glyphseed – Insignia Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- /index.html - 2025-12-01 01:30 (Europe/London) -->
+  <!-- /index.html - 2025-12-01 01:52 (Europe/London) -->
 
   <style>
     :root {
@@ -531,9 +532,8 @@
     </footer>
   </div>
 
-  <!-- /index.html script block - 2025-12-01 01:30 (Europe/London) -->
+  <!-- /index.html script block - 2025-12-01 01:52 (Europe/London) -->
   <script>
-    // Simple FNV-like hash to turn text into a 32 bit seed.
     function hashString(str) {
       let h = 2166136261 >>> 0;
       for (let i = 0; i < str.length; i++) {
@@ -543,7 +543,6 @@
       return h >>> 0;
     }
 
-    // xorshift32 seeded pseudo random generator.
     function makeRNG(seed) {
       let s = seed || 1;
       return function rand() {
@@ -577,7 +576,7 @@
       const vowelRatio = stats.vowels / length;
       const digitRatio = stats.digits / length;
 
-      const layoutMode = Math.floor(rand() * 4); // 0..3
+      const layoutMode = Math.floor(rand() * 4);
       const symmetryOpts = [2, 4, 6];
       const symmetry = symmetryOpts[Math.floor(rand() * symmetryOpts.length)];
 
@@ -634,9 +633,9 @@
           id: "bgGradient",
           cx: "50%",
           cy: "50%",
-          r: "65%",
+          r: "68%",
           fx: "50%",
-          fy: "38%",
+          fy: "36%",
           stops: [
             { offset: "0%", color: params.palette.backgroundInner, opacity: 1 },
             { offset: "100%", color: params.palette.backgroundOuter, opacity: 1 }
@@ -644,28 +643,28 @@
         },
         blurFilter: {
           id: "softBlur",
-          stdDeviation: 12
+          stdDeviation: 11
         }
       });
 
       const symmetry = params.symmetry;
-      const maxElements = 160;
+      const maxElements = 190;
       let usedElements = 0;
 
       const radiusBase = 120;
-      const radiusMax = 460;
+      const radiusMax = 380; // pulled in so the full crest stays visible
 
       const baseRingCount = 3 + Math.floor(params.detailLevel);
       const extraRings = Math.floor(params.structureLevel * 4);
-      const ringCount = Math.min(baseRingCount + extraRings, 10);
+      const ringCount = Math.min(baseRingCount + extraRings, 9);
 
       for (let i = 0; i < ringCount; i++) {
         if (usedElements >= maxElements) break;
 
         const t = i / Math.max(ringCount - 1, 1);
         const radius = radiusBase + t * (radiusMax - radiusBase);
-        const thickness = 6 + (1 - t) * 14 / symmetry;
-        const opacity = 0.15 + 0.35 * (1 - t);
+        const thickness = 5 + (1 - t) * 12 / symmetry;
+        const opacity = 0.18 + 0.32 * (1 - t);
 
         const ringColor = i % 2 === 0 ? params.palette.main1 : params.palette.main2;
 
@@ -683,10 +682,28 @@
         usedElements++;
       }
 
+      // faint secondary orbits for depth
+      const orbitCount = 3 + Math.floor(params.detailLevel / 2);
+      for (let i = 0; i < orbitCount; i++) {
+        const t = (i + 1) / (orbitCount + 1);
+        const r = radiusBase + 30 + t * (radiusMax - radiusBase - 60);
+        elements.push({
+          type: "ring",
+          cx: 500,
+          cy: 500,
+          r,
+          stroke: params.palette.subtle,
+          strokeWidth: 0.9,
+          opacity: 0.12,
+          blur: false
+        });
+        usedElements++;
+      }
+
       const spokeDensity = 10 + Math.floor(params.detailLevel * 4);
       const spokeCount = Math.min(spokeDensity * symmetry, 120);
-      const spokeBaseLen = 60 + params.detailLevel * 12;
-      const spokeJitter = 30 + params.detailLevel * 8;
+      const spokeBaseLen = 60 + params.detailLevel * 10;
+      const spokeJitter = 26 + params.detailLevel * 7;
 
       for (let i = 0; i < spokeCount; i++) {
         if (usedElements >= maxElements) break;
@@ -694,7 +711,7 @@
         const angle = t * Math.PI * 2;
 
         const len = spokeBaseLen + (rand() - 0.5) * spokeJitter;
-        const innerR = radiusBase - 20;
+        const innerR = radiusBase - 16;
         const outerR = innerR + len;
 
         const x1 = 500 + innerR * Math.cos(angle);
@@ -702,8 +719,8 @@
         const x2 = 500 + outerR * Math.cos(angle);
         const y2 = 500 + outerR * Math.sin(angle);
 
-        const weight = 1.2 + rand() * 2.5;
-        const opacity = 0.12 + 0.28 * (1 - params.curveBias);
+        const weight = 1.1 + rand() * 2.1;
+        const opacity = 0.13 + 0.26 * (1 - params.curveBias);
 
         elements.push({
           type: "line",
@@ -715,11 +732,11 @@
 
         usedElements++;
 
-        if (rand() < 0.35 && usedElements < maxElements) {
-          const orbR = outerR + 18 + rand() * 24;
+        if (rand() < 0.32 && usedElements < maxElements) {
+          const orbR = outerR + 22 + rand() * 20;
           const ox = 500 + orbR * Math.cos(angle);
           const oy = 500 + orbR * Math.sin(angle);
-          const oSize = 3 + rand() * 5;
+          const oSize = 3 + rand() * 4;
 
           elements.push({
             type: "circle",
@@ -727,7 +744,7 @@
             cy: oy,
             r: oSize,
             fill: params.palette.highlight,
-            opacity: 0.75
+            opacity: 0.8
           });
           usedElements++;
         }
@@ -738,15 +755,15 @@
         if (usedElements >= maxElements) break;
 
         const baseAngle = rand() * Math.PI * 2;
-        const bandRadius = radiusBase + 40 + rand() * (radiusMax - radiusBase - 100);
-        const bandWidth = 20 + rand() * 40;
+        const bandRadius = radiusBase + 40 + rand() * (radiusMax - radiusBase - 120);
+        const bandWidth = 18 + rand() * 32;
 
-        const segments = 60;
+        const segments = 64;
         const pathParts = [];
         for (let i = 0; i <= segments; i++) {
           const tt = i / segments;
-          const ang = baseAngle + (tt - 0.5) * (Math.PI * 1.6);
-          const wobble = Math.sin(tt * Math.PI * 4 + g) * 14 * params.curveBias;
+          const ang = baseAngle + (tt - 0.5) * (Math.PI * 1.7);
+          const wobble = Math.sin(tt * Math.PI * 4 + g) * 16 * params.curveBias;
           const r = bandRadius + wobble;
           const x = 500 + r * Math.cos(ang);
           const y = 500 + r * Math.sin(ang);
@@ -757,9 +774,38 @@
           type: "path",
           d: pathParts.join(" "),
           stroke: params.palette.main3,
-          strokeWidth: bandWidth / 10,
-          opacity: 0.18 + 0.15 * params.curveBias,
+          strokeWidth: bandWidth / 11,
+          opacity: 0.2 + 0.18 * params.curveBias,
           fill: "none"
+        });
+        usedElements++;
+      }
+
+      // diamond / petal motifs around inner crest
+      const petalCount = symmetry * 2;
+      const petalRadius = 210;
+      for (let i = 0; i < petalCount; i++) {
+        if (usedElements >= maxElements) break;
+        const angle = (i / petalCount) * Math.PI * 2;
+        const cx = 500 + petalRadius * Math.cos(angle);
+        const cy = 500 + petalRadius * Math.sin(angle);
+        const baseSize = 40 + params.detailLevel * 2;
+
+        const points = [];
+        const innerAngleOffset = Math.PI / 2;
+        for (let k = 0; k < 4; k++) {
+          const ang = angle + innerAngleOffset * k;
+          const scale = (k % 2 === 0) ? 1.0 : 0.55;
+          const px = cx + baseSize * scale * Math.cos(ang);
+          const py = cy + baseSize * scale * Math.sin(ang);
+          points.push(px.toFixed(2) + "," + py.toFixed(2));
+        }
+
+        elements.push({
+          type: "polygon",
+          points: points.join(" "),
+          fill: params.palette.main1,
+          opacity: 0.4
         });
         usedElements++;
       }
@@ -768,9 +814,9 @@
       for (let i = 0; i < accentCount; i++) {
         if (usedElements >= maxElements) break;
         const ringT = rand();
-        const r = radiusBase + 30 + ringT * (radiusMax - radiusBase - 60);
+        const r = radiusBase + 30 + ringT * (radiusMax - radiusBase - 80);
         const angle = rand() * Math.PI * 2;
-        const size = 6 + rand() * 18;
+        const size = 6 + rand() * 14;
         const rotation = rand() * Math.PI * 2;
 
         const cx = 500 + r * Math.cos(angle);
@@ -788,7 +834,7 @@
           type: "polygon",
           points: points.join(" "),
           fill: params.palette.highlight,
-          opacity: 0.55
+          opacity: 0.6
         });
         usedElements++;
       }
@@ -797,9 +843,9 @@
         type: "circle",
         cx: 500,
         cy: 500,
-        r: 82,
+        r: 88,
         fill: "url(#bgGradient)",
-        opacity: 0.9,
+        opacity: 0.96,
         blur: true
       });
 
@@ -807,27 +853,27 @@
         type: "circle",
         cx: 500,
         cy: 500,
-        r: 72,
+        r: 76,
         stroke: params.palette.main1,
-        strokeWidth: 3.2,
+        strokeWidth: 3.8,
         fill: "none",
-        opacity: 0.9
+        opacity: 0.96
       });
 
       elements.push({
         type: "circle",
         cx: 500,
         cy: 500,
-        r: 56,
+        r: 60,
         stroke: params.palette.main2,
-        strokeWidth: 2,
+        strokeWidth: 2.4,
         fill: "none",
-        opacity: 0.9
+        opacity: 0.96
       });
 
       const innerPoints = [];
       const innerSides = [4, 5, 6, 8][params.layoutMode];
-      const innerRadius = 34;
+      const innerRadius = 36;
       const innerRotation = Math.PI / innerSides;
 
       for (let i = 0; i < innerSides; i++) {
@@ -841,7 +887,7 @@
         type: "polygon",
         points: innerPoints.join(" "),
         fill: params.palette.subtle,
-        opacity: 0.95
+        opacity: 0.96
       });
 
       elements.push({
@@ -850,13 +896,13 @@
         cy: 500,
         r: 8 + params.curveBias * 12,
         fill: params.palette.highlight,
-        opacity: 0.95
+        opacity: 0.98
       });
 
       return elements;
     }
 
-    function sceneToSVGString(elements, palette) {
+    function sceneToSVGString(elements) {
       const viewBox = "0 0 1000 1000";
 
       let defs = "";
@@ -957,7 +1003,7 @@
       const params = buildParamsFromText(text);
       const rand = makeRNG(params.seed);
       const scene = buildScene(params, rand);
-      const svgString = sceneToSVGString(scene, params.palette);
+      const svgString = sceneToSVGString(scene);
 
       hostEl.innerHTML = svgString;
       lastSVGString = svgString;
@@ -1046,4 +1092,5 @@
     updateStatsHint();
   </script>
 </html>
+
 
