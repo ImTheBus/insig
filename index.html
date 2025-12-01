@@ -1,227 +1,280 @@
-
-<!-- /index.html - updated 2025-12-01 01:52 (Europe/London) -->
+<!-- /index.html - updated 2025-12-01 02:20 (Europe/London) -->
 
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Glyphseed – Insignia Generator</title>
+  <title>Glyphseed – Text-grown insignias</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- /index.html - 2025-12-01 01:52 (Europe/London) -->
+  <!-- /index.html - head block - 2025-12-01 02:20 (Europe/London) -->
 
   <style>
-    :root {
-      --bg: #020311;
-      --panel-bg: #050816;
-      --panel-border: #1f2937;
-      --accent: #4ade80;
-      --accent-soft: #22c55e;
-      --accent-cyan: #38bdf8;
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --danger: #f97373;
-    }
-
     * {
       box-sizing: border-box;
-    }
-
-    html,
-    body {
       margin: 0;
       padding: 0;
+    }
+
+    html, body {
       height: 100%;
     }
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--text-main);
+      color: #f9fafb;
+      overflow: hidden;
       background:
-        radial-gradient(circle at top, #020617 0, #000 70%) fixed,
-        radial-gradient(circle at bottom, #020617 0, #000 60%) fixed;
-      display: flex;
-      justify-content: center;
-      align-items: stretch;
-      padding: 16px;
+        radial-gradient(ellipse at top, #1e1b4b 0, #020617 45%, #000 100%);
+      background-size: 220% 220%;
+      animation: galaxyDrift 40s ease-in-out infinite alternate;
+      position: relative;
     }
 
-    .app-shell {
-      max-width: 1240px;
+    /* moving galaxy haze layers */
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -40%;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0.32;
+      background:
+        radial-gradient(circle at 10% 15%, rgba(129,140,248,0.9) 0, transparent 55%),
+        radial-gradient(circle at 80% 35%, rgba(244,114,182,0.9) 0, transparent 55%),
+        radial-gradient(circle at 40% 80%, rgba(251,191,36,0.8) 0, transparent 60%);
+      filter: blur(8px);
+      z-index: -1;
+      animation: nebulaShift 60s linear infinite;
+    }
+
+    body::after {
+      opacity: 0.24;
+      mix-blend-mode: soft-light;
+      filter: blur(18px);
+      animation-duration: 90s;
+      animation-direction: alternate-reverse;
+    }
+
+    @keyframes galaxyDrift {
+      0% { background-position: 10% 0%; }
+      50% { background-position: 50% 60%; }
+      100% { background-position: 90% 20%; }
+    }
+
+    @keyframes nebulaShift {
+      0% { transform: translate3d(0,0,0) scale(1); }
+      50% { transform: translate3d(-2%,3%,0) scale(1.05); }
+      100% { transform: translate3d(3%,-4%,0) scale(1.02); }
+    }
+
+    .stars-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1px 1px at 20% 25%, rgba(248,250,252,0.9), transparent),
+        radial-gradient(1px 1px at 60% 30%, rgba(248,250,252,0.7), transparent),
+        radial-gradient(1px 1px at 80% 70%, rgba(248,250,252,0.9), transparent),
+        radial-gradient(1px 1px at 35% 80%, rgba(248,250,252,0.6), transparent),
+        radial-gradient(1px 1px at 10% 70%, rgba(248,250,252,0.5), transparent);
+      opacity: 0.55;
+      animation: starTwinkle 14s ease-in-out infinite alternate;
+      z-index: -1;
+    }
+
+    @keyframes starTwinkle {
+      0%, 100% { opacity: 0.35; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.02); }
+    }
+
+    .page {
+      height: 100%;
       width: 100%;
       display: flex;
-      flex-direction: column;
-      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      position: relative;
     }
 
-    header.site-header {
+    .insignia-stage {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .insignia-host {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: min(92vmin, 980px);
+      height: min(92vmin, 980px);
+      transition: filter 0.5s ease, transform 0.5s ease;
+    }
+
+    .insignia-host.empty {
+      filter: blur(2px);
+      opacity: 0.88;
+    }
+
+    .insignia-placeholder {
+      text-align: center;
+      max-width: 420px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: rgba(226,232,240,0.82);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .insignia-placeholder span {
+      display: block;
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      margin-top: 8px;
+      color: rgba(148,163,184,0.9);
+    }
+
+    .insignia-wrapper {
+      width: 100%;
+      height: 100%;
+    }
+
+    .insignia-wrapper svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .insignia-wrapper.grow {
+      animation: insigniaGrow 3s ease-out forwards;
+      transform-origin: center;
+    }
+
+    @keyframes insigniaGrow {
+      0% {
+        transform: scale(0.18) rotate(-12deg);
+        opacity: 0;
+        filter: blur(10px);
+      }
+      55% {
+        transform: scale(1.08) rotate(4deg);
+        opacity: 1;
+        filter: blur(0);
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
+    .control-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      max-width: 420px;
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.96) 0, rgba(15,23,42,0.94) 40%, rgba(15,23,42,0.9) 100%);
+      backdrop-filter: blur(24px);
+      border-radius: 18px;
+      padding: 14px 16px 12px;
+      border: 1px solid rgba(148,163,184,0.55);
+      box-shadow:
+        0 0 20px rgba(15,23,42,0.8),
+        0 16px 40px rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      font-size: 0.9rem;
+      z-index: 10;
+      transition:
+        transform 0.35s ease,
+        opacity 0.35s ease,
+        max-height 0.35s ease,
+        box-shadow 0.35s ease;
+      overflow: hidden;
+      cursor: default;
+    }
+
+    .control-panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-inline: 4px;
-      gap: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
     }
 
-    .brand-lockup {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-    }
-
-    .brand-mark {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      background:
-        radial-gradient(circle at 30% 20%, rgba(56,189,248,0.8), transparent 60%),
-        radial-gradient(circle at 70% 80%, rgba(74,222,128,0.8), transparent 60%);
-      box-shadow:
-        0 0 0 2px rgba(15,23,42,0.8),
-        0 0 12px rgba(56,189,248,0.8);
-    }
-
-    .brand-title {
-      font-size: 1.05rem;
-      letter-spacing: 0.22em;
+    .cp-title {
+      font-size: 0.8rem;
       text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: #9ca3af;
     }
 
-    .brand-sub {
+    .cp-status {
       font-size: 0.7rem;
-      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.18em;
-    }
-
-    .header-meta {
+      color: #e5e7eb;
       display: flex;
-      gap: 8px;
       align-items: center;
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
+      gap: 6px;
     }
 
-    .header-tag {
+    .cp-status-dot {
+      width: 7px;
+      height: 7px;
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.4);
-      padding: 3px 10px;
-      background: rgba(15,23,42,0.75);
+      background: #4ade80;
+      box-shadow: 0 0 8px rgba(74,222,128,0.9);
     }
 
-    main.app {
-      flex: 1 1 auto;
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.3fr);
-      gap: 16px;
-    }
-
-    @media (max-width: 900px) {
-      body {
-        padding: 10px;
-      }
-      main.app {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      header.site-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-
-    .panel {
-      background: radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 80%, #000 100%);
-      border-radius: 18px;
-      border: 1px solid var(--panel-border);
-      padding: 16px 18px;
-      position: relative;
-      overflow: hidden;
-      box-shadow:
-        0 0 0 1px rgba(15,23,42,0.9),
-        0 18px 36px rgba(0,0,0,0.8);
-    }
-
-    .panel::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      background:
-        radial-gradient(circle at 0 0, rgba(56,189,248,0.13) 0, transparent 55%),
-        radial-gradient(circle at 100% 0, rgba(52,211,153,0.08) 0, transparent 50%);
-      pointer-events: none;
-      opacity: 0.75;
-    }
-
-    .panel-inner {
-      position: relative;
-      z-index: 1;
-    }
-
-    .panel-title {
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.2em;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-
-    .panel-heading {
-      font-size: 1.3rem;
-      margin: 0 0 6px;
-    }
-
-    .panel-subtitle {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-      max-width: 32rem;
+    .cp-body {
+      font-size: 0.86rem;
     }
 
     label {
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-muted);
+      letter-spacing: 0.18em;
+      color: #9ca3af;
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     textarea {
       width: 100%;
-      min-height: 150px;
+      min-height: 110px;
       resize: vertical;
-      border-radius: 12px;
-      border: 1px solid #111827;
-      background:
-        radial-gradient(circle at top left, #020617 0, #020617 40%, #030712 100%);
-      color: var(--text-main);
-      padding: 11px 12px;
-      font-size: 0.95rem;
+      border-radius: 10px;
+      border: 1px solid rgba(30,64,175,0.7);
+      background: radial-gradient(circle at top, #020617 0, #020617 50%, #020617 100%);
+      color: #f9fafb;
+      padding: 8px 9px;
+      font-size: 0.9rem;
       line-height: 1.45;
       outline: none;
-      box-shadow: inset 0 0 0 1px rgba(15,23,42,0.85);
     }
 
     textarea:focus {
-      border-color: var(--accent-soft);
-      box-shadow:
-        0 0 0 1px rgba(34,197,94,0.6),
-        0 0 0 6px rgba(34,197,94,0.2);
+      border-color: #facc15;
+      box-shadow: 0 0 0 1px rgba(250,204,21,0.8);
     }
 
     .hint {
-      margin-top: 6px;
-      font-size: 0.78rem;
-      color: var(--text-muted);
+      margin-top: 4px;
+      font-size: 0.74rem;
+      color: #9ca3af;
     }
 
     .controls-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
-      margin-top: 16px;
+      margin-top: 10px;
       margin-bottom: 4px;
     }
 
@@ -229,74 +282,41 @@
       flex: 1 1 auto;
     }
 
-    .info-pill {
-      font-size: 0.75rem;
-      color: var(--text-muted);
+    .button {
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.4);
-      padding: 4px 10px;
+      border: 1px solid rgba(148,163,184,0.65);
+      background: radial-gradient(circle at 0 0, rgba(251,191,36,0.32) 0, transparent 40%),
+                  linear-gradient(135deg, #22c55e, #fbbf24);
+      color: #020617;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      padding: 7px 13px;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(15,23,42,0.7);
-      backdrop-filter: blur(10px);
-    }
-
-    .info-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      box-shadow: 0 0 6px rgba(34,197,94,0.9);
-    }
-
-    .button {
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.45);
-      background: radial-gradient(circle at top left, #1e293b 0, #020617 55%, #020617 100%);
-      padding: 7px 14px;
-      color: var(--text-main);
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
       cursor: pointer;
-      transition:
-        transform 80ms ease-out,
-        box-shadow 80ms ease-out,
-        border-color 80ms ease-out,
-        background 80ms ease-out;
-      white-space: nowrap;
-    }
-
-    .button-primary {
-      border-color: rgba(74,222,128,0.9);
-      background:
-        radial-gradient(circle at 0 0, rgba(74,222,128,0.35) 0, transparent 40%),
-        linear-gradient(to right, #16a34a, #22c55e, #22c55e);
       box-shadow:
-        0 0 0 1px rgba(21,128,61,0.7),
-        0 8px 22px rgba(34,197,94,0.55);
+        0 8px 24px rgba(22,163,74,0.7),
+        0 0 0 1px rgba(15,23,42,0.8);
+      transition:
+        transform 0.12s ease-out,
+        box-shadow 0.12s ease-out;
+      white-space: nowrap;
     }
 
     .button:hover {
       transform: translateY(-1px);
       box-shadow:
-        0 0 0 1px rgba(148,163,184,0.45),
-        0 12px 26px rgba(15,23,42,0.8);
-    }
-
-    .button-primary:hover {
-      box-shadow:
-        0 0 0 1px rgba(22,163,74,0.9),
-        0 14px 32px rgba(34,197,94,0.75);
+        0 12px 32px rgba(22,163,74,0.85),
+        0 0 0 1px rgba(252,211,77,0.9);
     }
 
     .button:active {
       transform: translateY(0);
-      box-shadow: none;
+      box-shadow:
+        0 5px 18px rgba(22,163,74,0.7),
+        0 0 0 1px rgba(251,191,36,0.9);
     }
 
     .button-icon {
@@ -305,234 +325,183 @@
 
     select {
       border-radius: 999px;
-      padding: 6px 10px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid #111827;
-      color: var(--text-main);
-      font-size: 0.78rem;
-      letter-spacing: 0.06em;
+      padding: 5px 9px;
+      background: rgba(15,23,42,0.98);
+      border: 1px solid rgba(30,64,175,0.85);
+      color: #e5e7eb;
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       outline: none;
     }
 
     select:focus {
-      border-color: var(--accent-soft);
-      box-shadow: 0 0 0 3px rgba(34,197,94,0.35);
-    }
-
-    .export-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .export-row .button {
-      font-size: 0.72rem;
-      padding-inline: 11px;
+      border-color: #fbbf24;
+      box-shadow: 0 0 0 1px rgba(251,191,36,0.8);
     }
 
     .status {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 6px;
+      font-size: 0.74rem;
+      color: #9ca3af;
+      margin-top: 4px;
       min-height: 1.1em;
     }
 
     .status-error {
-      color: var(--danger);
+      color: #fca5a5;
     }
 
-    .preview-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .preview-label {
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      font-size: 0.75rem;
-    }
-
-    .preview-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      font-size: 0.75rem;
-    }
-
-    .meta-pill {
+    .seed-pill {
+      font-size: 0.72rem;
+      padding: 3px 8px;
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.4);
-      padding: 3px 9px;
-      background: rgba(15,23,42,0.8);
-    }
-
-    .preview-wrap {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 16px;
-      border: 1px solid rgba(15,23,42,0.9);
-      background:
-        radial-gradient(circle at 50% -10%, #020617 0, #000 65%);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .preview-inner {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
-      position: relative;
-    }
-
-    #insignia-host {
-      width: 100%;
-      height: 100%;
-    }
-
-    .preview-overlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      mix-blend-mode: soft-light;
-      opacity: 0.55;
-      background:
-        radial-gradient(circle at 15% 15%, rgba(148,163,184,0.26) 0, transparent 55%),
-        radial-gradient(circle at 85% 80%, rgba(56,189,248,0.18) 0, transparent 55%);
-    }
-
-    footer.site-footer {
-      margin-top: 4px;
-      display: flex;
-      justify-content: space-between;
+      border: 1px solid rgba(148,163,184,0.5);
+      color: #e5e7eb;
+      display: inline-flex;
       align-items: center;
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      padding-inline: 4px;
-      gap: 8px;
+      gap: 5px;
+      background: rgba(15,23,42,0.96);
     }
 
-    .footer-right {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .footer-dot {
+    .seed-dot {
       width: 6px;
       height: 6px;
       border-radius: 999px;
-      background: var(--accent-cyan);
-      box-shadow: 0 0 8px rgba(56,189,248,0.9);
+      background: #38bdf8;
+      box-shadow: 0 0 6px rgba(56,189,248,0.9);
+    }
+
+    .control-panel.minimized {
+      max-height: 40px;
+      transform: translateY(38%) scale(0.9);
+      opacity: 0.82;
+      box-shadow:
+        0 8px 20px rgba(15,23,42,0.85);
+    }
+
+    .control-panel.minimized .cp-body {
+      display: none;
+    }
+
+    .control-panel:hover {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .meta-row {
+      margin-top: 6px;
+      font-size: 0.72rem;
+      color: #e5e7eb;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+    }
+
+    .meta-tag {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 640px) {
+      .control-panel {
+        left: 10px;
+        right: 10px;
+        max-width: none;
+      }
+      .insignia-host {
+        width: min(96vmin, 780px);
+        height: min(96vmin, 780px);
+      }
     }
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="site-header">
-      <div class="brand-lockup">
-        <div class="brand-mark" aria-hidden="true"></div>
-        <div>
-          <div class="brand-title">Glyphseed</div>
-          <div class="brand-sub">Insignia generator</div>
+  <div class="stars-layer"></div>
+
+  <div class="page">
+    <div class="insignia-stage">
+      <div id="insignia-host" class="insignia-host empty">
+        <div class="insignia-placeholder">
+          Type a phrase in the corner and grow a symbol from it.
+          <span>Nothing is stored. Every mark comes only from your text.</span>
         </div>
       </div>
-      <div class="header-meta">
-        <span class="header-tag">Client side only</span>
-        <span>Deterministic seeds</span>
-      </div>
-    </header>
+    </div>
 
-    <main class="app">
-      <section class="panel" aria-label="Insignia controls">
-        <div class="panel-inner">
-          <div class="panel-title">Input</div>
-          <h1 class="panel-heading">Describe your mark in text</h1>
-          <p class="panel-subtitle">
-            Paste a phrase, a name, or an entire paragraph. Glyphseed hashes your text into a seed
-            and grows a single insignia from it. The same text always recreates the same piece.
-          </p>
-
-          <label for="input-text">Text source</label>
-          <textarea id="input-text" spellcheck="false"
-            placeholder="Type or paste anything that feels like it belongs inside the symbol you want."></textarea>
-          <div class="hint" id="text-hint">
-            0 characters • 0 vowels • 0 consonants • 0 digits • 0 symbols
-          </div>
-
-          <div class="controls-row">
-            <button class="button button-primary" id="generate-btn">
-              <span class="button-icon">✦</span>
-              <span>Grow insignia</span>
-            </button>
-
-            <div class="spacer"></div>
-
-            <div class="info-pill" id="seed-pill">
-              <span class="info-dot"></span>
-              <span>Seed: none</span>
-            </div>
-          </div>
-
-          <div class="controls-row" style="margin-top: 8px;">
-            <span style="font-size:0.78rem;color:var(--text-muted);">Export size</span>
-            <select id="export-size">
-              <option value="1024">1024 × 1024</option>
-              <option value="2048">2048 × 2048</option>
-            </select>
-          </div>
-
-          <div class="export-row">
-            <button class="button" id="download-svg-btn">
-              <span class="button-icon">⬇</span>
-              <span>Download SVG</span>
-            </button>
-            <button class="button" id="download-png-btn">
-              <span class="button-icon">⬇</span>
-              <span>Download PNG</span>
-            </button>
-          </div>
-
-          <div class="status" id="status-line"></div>
+    <aside class="control-panel" id="control-panel">
+      <div class="cp-header control-panel-header" id="panel-toggle">
+        <div class="cp-title">Glyphseed</div>
+        <div class="cp-status">
+          <div class="cp-status-dot"></div>
+          <span>Ready to grow</span>
         </div>
-      </section>
+      </div>
 
-      <section class="panel" aria-label="Insignia preview">
-        <div class="panel-inner">
-          <div class="preview-header">
-            <div class="preview-label">Generated insignia</div>
-            <div class="preview-meta" id="preview-meta">
-              <div class="meta-pill">Layout: none</div>
-              <div class="meta-pill">Symmetry: none</div>
-            </div>
-          </div>
-          <div class="preview-wrap">
-            <div class="preview-inner">
-              <div id="insignia-host"></div>
-              <div class="preview-overlay"></div>
-            </div>
+      <div class="cp-body">
+        <label for="input-text">Text source</label>
+        <textarea id="input-text" spellcheck="false"
+          placeholder="Paste a name, a sentence, or an entire paragraph. This text becomes the seed for your insignia."></textarea>
+        <div class="hint" id="text-hint">
+          0 characters • 0 vowels • 0 consonants • 0 digits • 0 symbols
+        </div>
+
+        <div class="controls-row" style="margin-top:10px;">
+          <button class="button" id="generate-btn">
+            <span class="button-icon">✶</span>
+            <span>Grow insignia</span>
+          </button>
+
+          <div class="spacer"></div>
+
+          <label for="palette-mode" style="margin-bottom:0;">Palette</label>
+          <select id="palette-mode">
+            <option value="auto">Auto</option>
+            <option value="cool">Cool</option>
+            <option value="warm">Warm</option>
+            <option value="sunset">Sunset</option>
+            <option value="neon">Neon</option>
+          </select>
+        </div>
+
+        <div class="controls-row" style="margin-top:8px;">
+          <label for="export-size" style="margin-bottom:0;">Export</label>
+          <select id="export-size">
+            <option value="1024">1024 × 1024</option>
+            <option value="2048">2048 × 2048</option>
+          </select>
+
+          <div class="spacer"></div>
+
+          <button class="button" id="download-svg-btn" style="background:rgba(15,23,42,0.98);color:#e5e7eb;border-color:rgba(148,163,184,0.7);box-shadow:none;">
+            <span class="button-icon">⬇</span>
+            <span>SVG</span>
+          </button>
+          <button class="button" id="download-png-btn" style="background:rgba(15,23,42,0.98);color:#e5e7eb;border-color:rgba(148,163,184,0.7);box-shadow:none;">
+            <span class="button-icon">⬇</span>
+            <span>PNG</span>
+          </button>
+        </div>
+
+        <div class="controls-row" style="margin-top:6px;">
+          <div class="seed-pill" id="seed-pill">
+            <div class="seed-dot"></div>
+            <span>Seed: none</span>
           </div>
         </div>
-      </section>
-    </main>
 
-    <footer class="site-footer">
-      <span>Glyphseed prototype · v0.1 · 2025-12-01</span>
-      <div class="footer-right">
-        <span class="footer-dot"></span>
-        <span>Local only • no text is sent anywhere</span>
+        <div class="meta-row" id="meta-row">
+          <div class="meta-tag">Layout: –</div>
+          <div class="meta-tag">Symmetry: –</div>
+          <div class="meta-tag">Detail: –</div>
+        </div>
+
+        <div class="status" id="status-line"></div>
       </div>
-    </footer>
+    </aside>
   </div>
 
-  <!-- /index.html script block - 2025-12-01 01:52 (Europe/London) -->
+  <!-- /index.html - script block - 2025-12-01 02:20 (Europe/London) -->
   <script>
     function hashString(str) {
       let h = 2166136261 >>> 0;
@@ -567,9 +536,47 @@
       };
     }
 
-    function buildParamsFromText(text) {
+    function buildPalette(baseHue, paletteMode, rand) {
+      let bgHue = baseHue;
+      let accentHue = (baseHue + 40) % 360;
+      let highlightHue = (baseHue + 120) % 360;
+
+      if (paletteMode === "cool") {
+        baseHue = 210 + Math.floor(rand() * 60);
+      } else if (paletteMode === "warm") {
+        baseHue = 10 + Math.floor(rand() * 60);
+      } else if (paletteMode === "sunset") {
+        baseHue = 290 + Math.floor(rand() * 40);
+      } else if (paletteMode === "neon") {
+        baseHue = Math.floor(rand() * 360);
+      }
+
+      bgHue = (baseHue + 210 + Math.floor(rand() * 30) - 15) % 360;
+      accentHue = (baseHue + 40 + Math.floor(rand() * 30) - 15) % 360;
+      highlightHue = (baseHue + 115 + Math.floor(rand() * 30) - 15) % 360;
+
+      function hsl(h, s, l, a) {
+        if (typeof a === "number") {
+          return "hsla(" + h + "," + s + "%," + l + "%," + a + ")";
+        }
+        return "hsl(" + h + "," + s + "%," + l + "%)";
+      }
+
+      return {
+        backgroundInner: hsl(bgHue, 35, 7),
+        backgroundOuter: hsl(bgHue, 70, 3),
+        main1: hsl(accentHue, 88, 60),
+        main2: hsl((accentHue + 26) % 360, 80, 61),
+        main3: hsl((accentHue + 320) % 360, 70, 55),
+        subtle: hsl((highlightHue + 40) % 360, 60, 62),
+        highlight: hsl(highlightHue, 80, 74)
+      };
+    }
+
+    function buildParamsFromText(text, paletteMode) {
       const stats = analyseText(text);
-      const seed = text.length ? hashString(text) : hashString("empty");
+      const combined = paletteMode + "|" + text;
+      const seed = combined.length ? hashString(combined) : hashString("empty");
       const rand = makeRNG(seed);
 
       const length = Math.max(stats.length, 1);
@@ -586,7 +593,7 @@
       const accentLevel = Math.min(stats.symbols, 15);
 
       const baseHue = Math.floor(rand() * 360);
-      const palette = buildPalette(baseHue, rand);
+      const palette = buildPalette(baseHue, paletteMode, rand);
 
       return {
         seed,
@@ -601,29 +608,6 @@
       };
     }
 
-    function hsl(h, s, l, a) {
-      if (typeof a === "number") {
-        return "hsla(" + h + "," + s + "%," + l + "%," + a + ")";
-      }
-      return "hsl(" + h + "," + s + "%," + l + "%)";
-    }
-
-    function buildPalette(baseHue, rand) {
-      const bgHue = (baseHue + 210 + Math.floor(rand() * 40) - 20) % 360;
-      const accentHue = (baseHue + 40 + Math.floor(rand() * 40) - 20) % 360;
-      const highlightHue = (baseHue + 120 + Math.floor(rand() * 40) - 20) % 360;
-
-      return {
-        backgroundInner: hsl(bgHue, 35, 8),
-        backgroundOuter: hsl(bgHue, 65, 2),
-        main1: hsl(accentHue, 85, 58),
-        main2: hsl((accentHue + 30) % 360, 70, 62),
-        main3: hsl((accentHue + 320) % 360, 60, 55),
-        subtle: hsl((highlightHue + 40) % 360, 65, 60),
-        highlight: hsl(highlightHue, 80, 75)
-      };
-    }
-
     function buildScene(params, rand) {
       const elements = [];
 
@@ -633,9 +617,9 @@
           id: "bgGradient",
           cx: "50%",
           cy: "50%",
-          r: "68%",
+          r: "70%",
           fx: "50%",
-          fy: "36%",
+          fy: "34%",
           stops: [
             { offset: "0%", color: params.palette.backgroundInner, opacity: 1 },
             { offset: "100%", color: params.palette.backgroundOuter, opacity: 1 }
@@ -652,7 +636,7 @@
       let usedElements = 0;
 
       const radiusBase = 120;
-      const radiusMax = 380; // pulled in so the full crest stays visible
+      const radiusMax = 360;
 
       const baseRingCount = 3 + Math.floor(params.detailLevel);
       const extraRings = Math.floor(params.structureLevel * 4);
@@ -665,7 +649,6 @@
         const radius = radiusBase + t * (radiusMax - radiusBase);
         const thickness = 5 + (1 - t) * 12 / symmetry;
         const opacity = 0.18 + 0.32 * (1 - t);
-
         const ringColor = i % 2 === 0 ? params.palette.main1 : params.palette.main2;
 
         elements.push({
@@ -682,7 +665,6 @@
         usedElements++;
       }
 
-      // faint secondary orbits for depth
       const orbitCount = 3 + Math.floor(params.detailLevel / 2);
       for (let i = 0; i < orbitCount; i++) {
         const t = (i + 1) / (orbitCount + 1);
@@ -781,7 +763,6 @@
         usedElements++;
       }
 
-      // diamond / petal motifs around inner crest
       const petalCount = symmetry * 2;
       const petalRadius = 210;
       for (let i = 0; i < petalCount; i++) {
@@ -959,13 +940,17 @@
     const hostEl = document.getElementById("insignia-host");
     const statusEl = document.getElementById("status-line");
     const seedPill = document.getElementById("seed-pill");
-    const previewMeta = document.getElementById("preview-meta");
     const exportSizeEl = document.getElementById("export-size");
     const downloadSvgBtn = document.getElementById("download-svg-btn");
     const downloadPngBtn = document.getElementById("download-png-btn");
+    const paletteModeEl = document.getElementById("palette-mode");
+    const metaRowEl = document.getElementById("meta-row");
+    const panelEl = document.getElementById("control-panel");
+    const panelToggle = document.getElementById("panel-toggle");
 
     let lastSVGString = "";
     let lastParams = null;
+    let autoMinimizeTimeout = null;
 
     function updateStatsHint() {
       const text = inputEl.value;
@@ -993,31 +978,46 @@
     function generateInsignia() {
       const text = inputEl.value.trim();
       if (!text) {
-        statusEl.textContent = "Enter some text first to grow an insignia.";
+        statusEl.textContent = "Add some text first to grow an insignia.";
         statusEl.classList.add("status-error");
         return;
       }
+      const paletteMode = paletteModeEl.value || "auto";
       statusEl.classList.remove("status-error");
-      statusEl.textContent = "Generating...";
+      statusEl.textContent = "Growing...";
 
-      const params = buildParamsFromText(text);
+      const params = buildParamsFromText(text, paletteMode);
       const rand = makeRNG(params.seed);
       const scene = buildScene(params, rand);
       const svgString = sceneToSVGString(scene);
 
-      hostEl.innerHTML = svgString;
+      const wrapper = document.createElement("div");
+      wrapper.className = "insignia-wrapper grow";
+      wrapper.innerHTML = svgString;
+
+      hostEl.classList.remove("empty");
+      hostEl.innerHTML = "";
+      hostEl.appendChild(wrapper);
+
       lastSVGString = svgString;
       lastParams = params;
 
       const seedHex = "0x" + params.seed.toString(16).padStart(8, "0");
       seedPill.querySelector("span:nth-child(2)").textContent = "Seed: " + seedHex;
 
-      previewMeta.innerHTML =
-        '<div class="meta-pill">Layout: ' + layoutLabel(params.layoutMode) + '</div>' +
-        '<div class="meta-pill">Symmetry: ' + params.symmetry + " fold</div>" +
-        '<div class="meta-pill">Detail: ' + params.detailLevel.toFixed(1) + "</div>";
+      metaRowEl.innerHTML =
+        '<div class="meta-tag">Layout: ' + layoutLabel(params.layoutMode) + '</div>' +
+        '<div class="meta-tag">Symmetry: ' + params.symmetry + " fold</div>" +
+        '<div class="meta-tag">Detail: ' + params.detailLevel.toFixed(1) + "</div>";
 
-      statusEl.textContent = "Insignia generated. Use the export controls to save it.";
+      statusEl.textContent = "Insignia grown. Use SVG or PNG to export.";
+
+      if (autoMinimizeTimeout) {
+        clearTimeout(autoMinimizeTimeout);
+      }
+      autoMinimizeTimeout = setTimeout(function () {
+        panelEl.classList.add("minimized");
+      }, 3200);
     }
 
     generateBtn.addEventListener("click", generateInsignia);
@@ -1088,6 +1088,18 @@
 
     downloadSvgBtn.addEventListener("click", downloadSVG);
     downloadPngBtn.addEventListener("click", downloadPNG);
+
+    panelToggle.addEventListener("click", function () {
+      if (panelEl.classList.contains("minimized")) {
+        panelEl.classList.remove("minimized");
+        if (autoMinimizeTimeout) {
+          clearTimeout(autoMinimizeTimeout);
+          autoMinimizeTimeout = null;
+        }
+      } else {
+        panelEl.classList.add("minimized");
+      }
+    });
 
     updateStatsHint();
   </script>
