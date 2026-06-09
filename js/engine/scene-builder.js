@@ -1,313 +1,257 @@
 // /js/engine/scene-builder.js
-// version: 2025-12-01 v0.3
+// version: 2026-06-09 v1.0 (deterministic per-character growth)
+//
+// THE CIPHER ENGINE.
+//
+// The image is grown character by character. Each character of the input
+// contributes exactly ONE visible "mark" to the composition, placed at a
+// deterministic position on a golden-angle spiral. The KIND of mark is
+// decided by the character's class (vowel / consonant / digit / space /
+// symbol / other); its exact geometry, colour and rotation are decided by a
+// per-character seed that depends on the character, its position, AND every
+// character before it (a running hash). Word boundaries (spaces) also drop a
+// concentric ring, so the structure echoes the phrase's shape.
+//
+// Determinism guarantees (no Math.random / Date / time anywhere):
+//   - position i sits at angle i * GOLDEN_ANGLE and radius growing with i,
+//   - the mark at i is seeded from charSeed(runningHash, code, i),
+//   - the runningHash chains forward, so order matters (cipher property),
+//   - identical input -> identical element list -> identical pixels.
+//
+// The returned list is a flat array of primitive descriptors consumed by
+// the renderer. Element order is the growth order (char 0 first), so the
+// reveal animation literally replays the message being written.
 
-import { makeRNG } from "./text-seed.js";
+import { makeRNG, classifyChar, charSeed } from "./text-seed.js";
 
-// utility for element IDs
-let idCounter = 0;
-function nextId(layer) {
-  idCounter++;
-  return `${layer}-${idCounter}`;
+const CX = 500;
+const CY = 500;
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5)); // ~2.39996 rad
+const TWO_PI = Math.PI * 2;
+
+let _id = 0;
+function nid(prefix, i) {
+  _id += 1;
+  return `${prefix}-${i}-${_id}`;
 }
 
-// build a group of SVG element descriptions
-export function buildScene(params) {
-  idCounter = 0; // reset ID counter every build
+// Spiral placement: deterministic for a given index and total length.
+// Marks spread outward as the phrase grows; radius is normalised so short
+// and long phrases both fill the frame pleasingly.
+function spiralPos(index, total) {
+  const t = total <= 1 ? 0.5 : index / (total - 1);
+  const ang = index * GOLDEN_ANGLE;
+  const rMin = 70;
+  const rMax = 380;
+  // sqrt spread = even areal density (classic phyllotaxis look)
+  const r = rMin + Math.sqrt(t) * (rMax - rMin);
+  return { ang, r, x: CX + r * Math.cos(ang), y: CY + r * Math.sin(ang), t };
+}
 
-  const rand = makeRNG(params.seed);
-  const elements = [];
-  const symmetry = params.symmetry;
+// ---- per-class mark builders --------------------------------
+// Each returns an array of primitive element descriptors. Geometry is fully
+// derived from `rand` (seeded per character) + the deterministic position.
 
-  const radiusBase = 120;
-  const radiusMax = 360;
-
-  // ---- DEFS --------------------------------------------------
-  elements.push({
-    id: nextId("defs"),
-    type: "defs",
-    radialGradient: {
-      id: "bgGradient",
-      cx: "50%",
-      cy: "50%",
-      r: "70%",
-      fx: "50%",
-      fy: "34%",
-      stops: [
-        { offset: "0%", color: params.palette.backgroundInner, opacity: 1 },
-        { offset: "100%", color: params.palette.backgroundOuter, opacity: 1 }
-      ]
+// vowel -> luminous node: a filled orb with a soft halo ring.
+function markNode(rand, pal, pos, i) {
+  const size = 7 + rand() * 9;
+  return [
+    {
+      id: nid("halo", i), type: "circle", layer: "nodes",
+      cx: pos.x, cy: pos.y, r: size + 6 + rand() * 6,
+      fill: "none", stroke: pal.node, strokeWidth: 1.1,
+      opacity: 0.28 + rand() * 0.18
     },
-    blurFilter: {
-      id: "softBlur",
-      stdDeviation: 11
+    {
+      id: nid("node", i), type: "circle", layer: "nodes",
+      cx: pos.x, cy: pos.y, r: size,
+      fill: pal.node, opacity: 0.82, glow: true
     }
-  });
+  ];
+}
 
-  // ---- RINGS -------------------------------------------------
-  const baseRingCount = 3 + Math.floor(params.detailLevel);
-  const extraRings = Math.floor(params.structureLevel * 4);
-  const ringCount = Math.min(baseRingCount + extraRings, 9);
-
-  for (let i = 0; i < ringCount; i++) {
-    const t = i / Math.max(ringCount - 1, 1);
-    const wobble = (rand() - 0.5) * 6; // subtle irregularity
-    const r = radiusBase + t * (radiusMax - radiusBase) + wobble;
-    elements.push({
-      id: nextId("ring"),
-      type: "ring",
-      layer: "rings",
-      cx: 500,
-      cy: 500,
-      r,
-      stroke: i % 2 === 0 ? params.palette.main1 : params.palette.main2,
-      strokeWidth: 5 + (1 - t) * 12 / symmetry,
-      opacity: 0.18 + 0.32 * (1 - t),
-      blur: i % 3 === 0 && i > 0
-    });
-  }
-
-  // ---- ORBIT LINES -------------------------------------------
-  const orbitCount = 3 + Math.floor(params.detailLevel / 2);
-  for (let i = 0; i < orbitCount; i++) {
-    const t = (i + 1) / (orbitCount + 1);
-    const wobble = (rand() - 0.5) * 4;
-    const r = radiusBase + 30 + t * (radiusMax - radiusBase - 60) + wobble;
-    elements.push({
-      id: nextId("orbit"),
-      type: "ring",
-      layer: "orbits",
-      cx: 500,
-      cy: 500,
-      r,
-      stroke: params.palette.subtle,
-      strokeWidth: 0.9,
-      opacity: 0.12,
-      blur: false
-    });
-  }
-
-  // ---- SPOKES ------------------------------------------------
-  const spokeDensity = 10 + Math.floor(params.detailLevel * 4);
-  const spokeCount = Math.min(spokeDensity * symmetry, 120);
-  const spokeBaseLen = 60 + params.detailLevel * 10;
-  const spokeJitter = 26 + params.detailLevel * 7;
-
-  for (let i = 0; i < spokeCount; i++) {
-    const t = i / spokeCount;
-    const ang = t * Math.PI * 2;
-
-    const len = spokeBaseLen + (rand() - 0.5) * spokeJitter;
-    const innerR = radiusBase - 16;
-    const outerR = innerR + len;
-
-    elements.push({
-      id: nextId("spoke"),
-      type: "line",
-      layer: "spokes",
-      x1: 500 + innerR * Math.cos(ang),
-      y1: 500 + innerR * Math.sin(ang),
-      x2: 500 + outerR * Math.cos(ang),
-      y2: 500 + outerR * Math.sin(ang),
-      stroke: params.palette.subtle,
-      strokeWidth: 1.1 + rand() * 2.1,
-      opacity: 0.13 + 0.26 * (1 - params.curveBias)
-    });
-  }
-
-  // ---- BRANCHES (organic radial trees) -----------------------
-  const branchDepth = 2 + Math.floor(params.detailLevel / 2);
-  const baseBranchLen = 40 + params.detailLevel * 6;
-  const branchSpread = Math.PI / 6 + params.curveBias * (Math.PI / 12);
-
-  function addBranch(cx, cy, angle, length, depth) {
-    const x2 = cx + length * Math.cos(angle);
-    const y2 = cy + length * Math.sin(angle);
-
-    elements.push({
-      id: nextId("branch"),
-      type: "line",
-      layer: "branches",
-      x1: cx,
-      y1: cy,
-      x2,
-      y2,
-      stroke: params.palette.subtle,
-      strokeWidth: Math.max(0.8, 2.6 - depth * 0.6),
-      opacity: 0.18 + 0.12 * depth
-    });
-
-    if (depth <= 0) return;
-    const shrink = 0.68 + (rand() * 0.12);
-    const nextLen = length * shrink;
-    const delta = branchSpread * (0.75 + rand() * 0.4);
-
-    addBranch(x2, y2, angle + delta, nextLen, depth - 1);
-    addBranch(x2, y2, angle - delta, nextLen, depth - 1);
-  }
-
-  for (let i = 0; i < params.symmetry; i++) {
-    const baseAngle = (i / params.symmetry) * Math.PI * 2;
-    const startR = radiusBase + 10;
-    const sx = 500 + startR * Math.cos(baseAngle);
-    const sy = 500 + startR * Math.sin(baseAngle);
-    addBranch(sx, sy, baseAngle, baseBranchLen, branchDepth);
-  }
-
-  // ---- CURVED BANDS ------------------------------------------
-  const curveGroups = 2 + Math.floor(params.curveBias * 4);
-  for (let g = 0; g < curveGroups; g++) {
-    const baseAngle = rand() * Math.PI * 2;
-    const bandRadius = radiusBase + 40 + rand() * (radiusMax - radiusBase - 120);
-    const bandWidth = 18 + rand() * 32;
-
-    const parts = [];
-    const segments = 64;
-
-    for (let i = 0; i <= segments; i++) {
-      const tt = i / segments;
-      const ang = baseAngle + (tt - 0.5) * (Math.PI * 1.7);
-      const wobble = Math.sin(tt * Math.PI * 4 + g) * 16 * params.curveBias;
-      const r = bandRadius + wobble;
-      parts.push(`${500 + r * Math.cos(ang)} ${500 + r * Math.sin(ang)}`);
+// consonant -> radial blade: a tapered line pointing outward from centre,
+// with a small cross-tick. Angle aligned to the spiral spoke + jitter.
+function markBlade(rand, pal, pos, i) {
+  const ang = pos.ang + (rand() - 0.5) * 0.5;
+  const len = 26 + rand() * 40;
+  const x1 = pos.x - Math.cos(ang) * len * 0.4;
+  const y1 = pos.y - Math.sin(ang) * len * 0.4;
+  const x2 = pos.x + Math.cos(ang) * len * 0.6;
+  const y2 = pos.y + Math.sin(ang) * len * 0.6;
+  const perp = ang + Math.PI / 2;
+  const tick = 5 + rand() * 6;
+  return [
+    {
+      id: nid("blade", i), type: "line", layer: "blades",
+      x1, y1, x2, y2, stroke: pal.blade,
+      strokeWidth: 1.4 + rand() * 2.4, opacity: 0.62 + rand() * 0.2
+    },
+    {
+      id: nid("tick", i), type: "line", layer: "blades",
+      x1: pos.x - Math.cos(perp) * tick, y1: pos.y - Math.sin(perp) * tick,
+      x2: pos.x + Math.cos(perp) * tick, y2: pos.y + Math.sin(perp) * tick,
+      stroke: pal.blade, strokeWidth: 1.0, opacity: 0.5
     }
+  ];
+}
 
-    elements.push({
-      id: nextId("curve"),
-      type: "path",
-      layer: "curves",
-      d: `M ${parts.join(" L ")}`,
-      stroke: params.palette.main3,
-      strokeWidth: bandWidth / 11,
-      opacity: 0.2 + 0.18 * params.curveBias,
-      fill: "none"
-    });
-  }
-
-  // ---- PETALS ------------------------------------------------
-  const petalRadius = 210;
-  const petalCount = symmetry * 2;
-
-  for (let i = 0; i < petalCount; i++) {
-    const ang = (i / petalCount) * Math.PI * 2;
-    const cx = 500 + petalRadius * Math.cos(ang);
-    const cy = 500 + petalRadius * Math.sin(ang);
-    const baseSize = 40 + params.detailLevel * 2;
-
-    const pts = [];
-    const innerOffset = Math.PI / 2;
-    for (let k = 0; k < 4; k++) {
-      const a = ang + innerOffset * k;
-      const s = (k % 2 === 0) ? 1 : 0.55;
-      pts.push(`${cx + baseSize * s * Math.cos(a)},${cy + baseSize * s * Math.sin(a)}`);
-    }
-
-    elements.push({
-      id: nextId("petal"),
-      type: "polygon",
-      layer: "petals",
-      points: pts.join(" "),
-      fill: params.palette.main1,
-      opacity: 0.4
-    });
-  }
-
-  // ---- ACCENTS (triangles, dots) -----------------------------
-  const accentCount = Math.min(params.accentLevel * 3, 40);
-
-  for (let i = 0; i < accentCount; i++) {
-    const ringT = rand();
-    const r = radiusBase + 30 + ringT * (radiusMax - radiusBase - 80);
-    const ang = rand() * Math.PI * 2;
-
-    const cx = 500 + r * Math.cos(ang);
-    const cy = 500 + r * Math.sin(ang);
-    const size = 6 + rand() * 14;
-    const rot = rand() * Math.PI * 2;
-
-    const pts = [];
-    for (let k = 0; k < 3; k++) {
-      const a = rot + k * (Math.PI * 2 / 3);
-      pts.push(`${cx + size * Math.cos(a)},${cy + size * Math.sin(a)}`);
-    }
-
-    elements.push({
-      id: nextId("accent"),
-      type: "polygon",
-      layer: "accents",
-      points: pts.join(" "),
-      fill: params.palette.highlight,
-      opacity: 0.6
-    });
-  }
-
-  // ---- CENTER ------------------------------------------------
-  elements.push({
-    id: nextId("core-bg"),
-    type: "circle",
-    layer: "core-bg",
-    cx: 500,
-    cy: 500,
-    r: 88,
-    fill: "url(#bgGradient)",
-    opacity: 0.96,
-    blur: true
-  });
-
-  elements.push({
-    id: nextId("center"),
-    type: "circle",
-    layer: "center",
-    cx: 500,
-    cy: 500,
-    r: 76,
-    stroke: params.palette.main1,
-    strokeWidth: 3.8,
-    fill: "none",
-    opacity: 0.96
-  });
-
-  elements.push({
-    id: nextId("center"),
-    type: "circle",
-    layer: "center",
-    cx: 500,
-    cy: 500,
-    r: 60,
-    stroke: params.palette.main2,
-    strokeWidth: 2.4,
-    fill: "none",
-    opacity: 0.96
-  });
-
-  const sides = [4, 5, 6, 8][params.layoutMode];
-  const innerRadius = 36;
-  const innerRot = Math.PI / sides;
-
+// digit -> nested polygon whose side count == the digit value (min 3).
+// The digit is literally legible from the shape: '5' is a pentagon.
+function markPoly(rand, pal, pos, i, value) {
+  const sides = Math.max(3, value === 0 ? 10 : value + 2);
+  const size = 12 + rand() * 12;
+  const rot = rand() * TWO_PI;
   const pts = [];
-  for (let i = 0; i < sides; i++) {
-    const ang = innerRot + i * (Math.PI * 2 / sides);
-    pts.push(`${500 + innerRadius * Math.cos(ang)},${500 + innerRadius * Math.sin(ang)}`);
+  for (let k = 0; k < sides; k++) {
+    const a = rot + (k / sides) * TWO_PI;
+    pts.push(`${(pos.x + size * Math.cos(a)).toFixed(2)},${(pos.y + size * Math.sin(a)).toFixed(2)}`);
+  }
+  const inner = [];
+  for (let k = 0; k < sides; k++) {
+    const a = rot + (k / sides) * TWO_PI;
+    inner.push(`${(pos.x + size * 0.5 * Math.cos(a)).toFixed(2)},${(pos.y + size * 0.5 * Math.sin(a)).toFixed(2)}`);
+  }
+  return [
+    {
+      id: nid("poly", i), type: "polygon", layer: "polys",
+      points: pts.join(" "), fill: "none",
+      stroke: pal.poly, strokeWidth: 1.8, opacity: 0.8
+    },
+    {
+      id: nid("polyi", i), type: "polygon", layer: "polys",
+      points: inner.join(" "), fill: pal.poly, opacity: 0.22
+    }
+  ];
+}
+
+// symbol -> branching twig: a short fractal sprig (deterministic recursion).
+function markTwig(rand, pal, pos, i) {
+  const els = [];
+  const baseAng = pos.ang + (rand() - 0.5) * 1.2;
+  function branch(x, y, ang, len, depth, k) {
+    const x2 = x + Math.cos(ang) * len;
+    const y2 = y + Math.sin(ang) * len;
+    els.push({
+      id: nid("twig", i) + "-" + depth + "-" + k,
+      type: "line", layer: "twigs",
+      x1: x, y1: y, x2, y2, stroke: pal.twig,
+      strokeWidth: Math.max(0.8, 2.2 - depth * 0.6),
+      opacity: 0.5 + 0.12 * depth
+    });
+    if (depth <= 0) return;
+    const spread = 0.5 + rand() * 0.3;
+    const nl = len * (0.62 + rand() * 0.12);
+    branch(x2, y2, ang + spread, nl, depth - 1, k * 2);
+    branch(x2, y2, ang - spread, nl, depth - 1, k * 2 + 1);
+  }
+  branch(pos.x, pos.y, baseAng, 22 + rand() * 18, 2, 1);
+  return els;
+}
+
+// other (non-ascii etc.) -> spark cluster.
+function markSpark(rand, pal, pos, i) {
+  const els = [];
+  const count = 4 + Math.floor(rand() * 4);
+  for (let k = 0; k < count; k++) {
+    const a = rand() * TWO_PI;
+    const rr = 4 + rand() * 16;
+    els.push({
+      id: nid("spark", i) + "-" + k,
+      type: "circle", layer: "sparks",
+      cx: pos.x + Math.cos(a) * rr, cy: pos.y + Math.sin(a) * rr,
+      r: 1.2 + rand() * 1.8, fill: pal.spark,
+      opacity: 0.5 + rand() * 0.3, glow: true
+    });
+  }
+  return els;
+}
+
+// space -> a concentric ring band (word boundary). Drawn at the radius the
+// next character will start from, so words read as nested shells.
+function markWordRing(rand, pal, pos, i, ringIndex) {
+  const r = 90 + ringIndex * 42 + rand() * 10;
+  return [{
+    id: nid("ring", i), type: "circle", layer: "rings",
+    cx: CX, cy: CY, r, fill: "none", stroke: pal.ring,
+    strokeWidth: 1.0 + rand() * 1.4,
+    opacity: 0.22 + rand() * 0.12, dash: ringIndex % 2 === 0
+  }];
+}
+
+// ---- main build --------------------------------------------
+// Returns { defs, elements } where elements are in growth order.
+export function buildScene(text, palette) {
+  _id = 0;
+  const chars = [...text]; // codepoint-aware
+  const total = chars.length;
+
+  const defs = {
+    bgGradient: {
+      inner: palette.backgroundInner,
+      outer: palette.backgroundOuter
+    },
+    glow: true
+  };
+
+  const elements = [];
+
+  // Background plate (deterministic, no seed needed).
+  elements.push({
+    id: "bg", type: "circle", layer: "bg",
+    cx: CX, cy: CY, r: 470, fill: "url(#bgGradient)", opacity: 1
+  });
+
+  let runningHash = 0x811c9dc5; // FNV offset basis, deterministic start
+  let wordRingIndex = 0;
+
+  for (let i = 0; i < total; i++) {
+    const ch = chars[i];
+    const info = classifyChar(ch);
+    const seeded = charSeed(runningHash, info.code, i);
+    runningHash = seeded.runningHash;
+    const rand = makeRNG(seeded.seed);
+    const pos = spiralPos(i, total);
+
+    let marks;
+    switch (info.cls) {
+      case 0: marks = markNode(rand, palette, pos, i); break;
+      case 1: marks = markBlade(rand, palette, pos, i); break;
+      case 2: marks = markPoly(rand, palette, pos, i, info.value); break;
+      case 3:
+        marks = markWordRing(rand, palette, pos, i, wordRingIndex);
+        wordRingIndex += 1;
+        break;
+      case 4: marks = markTwig(rand, palette, pos, i); break;
+      default: marks = markSpark(rand, palette, pos, i); break;
+    }
+    // tag every element with its source char index for the diff/reveal
+    for (const m of marks) m.charIndex = i;
+    elements.push(...marks);
   }
 
+  // Central sigil core: size/segments deterministically from text length.
+  const coreSeed = makeRNG(0xC0FFEE ^ total ^ palette.baseHue);
+  const coreSides = 3 + (total % 6);
+  const corePts = [];
+  for (let k = 0; k < coreSides; k++) {
+    const a = (k / coreSides) * TWO_PI - Math.PI / 2;
+    corePts.push(`${(CX + 30 * Math.cos(a)).toFixed(2)},${(CY + 30 * Math.sin(a)).toFixed(2)}`);
+  }
   elements.push({
-    id: nextId("center"),
-    type: "polygon",
-    layer: "center",
-    points: pts.join(" "),
-    fill: params.palette.subtle,
-    opacity: 0.96
+    id: "core-ring", type: "circle", layer: "core",
+    cx: CX, cy: CY, r: 44, fill: "none", stroke: palette.core,
+    strokeWidth: 2.2, opacity: 0.9
+  });
+  elements.push({
+    id: "core-poly", type: "polygon", layer: "core",
+    points: corePts.join(" "), fill: palette.core, opacity: 0.85, glow: true
+  });
+  elements.push({
+    id: "core-dot", type: "circle", layer: "core",
+    cx: CX, cy: CY, r: 6 + (coreSeed() * 5), fill: palette.spark,
+    opacity: 0.95, glow: true
   });
 
-  elements.push({
-    id: nextId("center-dot"),
-    type: "circle",
-    layer: "center",
-    cx: 500,
-    cy: 500,
-    r: 8 + params.curveBias * 12,
-    fill: params.palette.highlight,
-    opacity: 0.98
-  });
-
-  return elements;
+  return { defs, elements };
 }

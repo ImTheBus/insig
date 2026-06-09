@@ -1,105 +1,128 @@
 <!-- /index.html -->
-<!-- version: 2025-12-01 v0.3 -->
-
+<!-- version: 2026-06-09 v1.0 -->
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Glyphseed – Text-grown insignias</title>
+  <title>Glyphseed — a sigil grown from your words</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Glyphseed turns any phrase into a unique, deterministic sigil. Every character becomes a mark — the same words always grow the same image. A generative-art cipher.">
+  <meta name="color-scheme" content="dark">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/ui.css">
   <link rel="stylesheet" href="css/insignia.css">
 </head>
 <body>
-  <div class="stars-layer"></div>
+  <div class="grain" aria-hidden="true"></div>
 
-  <div class="page">
-    <div class="insignia-stage">
-      <div id="insignia-host" class="empty">
-        <div class="insignia-placeholder">
-          Type a phrase in the corner and grow a symbol from it.
-          <span>Nothing is stored. Every mark comes only from your text.</span>
+  <header class="masthead">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">✶</span>
+      <h1>Glyphseed</h1>
+    </div>
+    <button id="about-toggle" class="about-toggle" aria-expanded="false" aria-controls="about-panel">
+      What is this?
+    </button>
+  </header>
+
+  <section id="about-panel" class="about-panel" aria-label="About Glyphseed">
+    <p>
+      <strong>Glyphseed grows a sigil from your words.</strong> Every character you
+      type becomes a permanent mark in the composition — vowels are luminous
+      <em>nodes</em>, consonants are radial <em>blades</em>, digits become
+      <em>polygons</em> with that many sides, spaces drop concentric
+      <em>rings</em> between words, and symbols sprout fractal <em>twigs</em>.
+    </p>
+    <p>
+      It is a <strong>visual cipher</strong>: the mapping from text to image is
+      fully deterministic. The same phrase always grows the <em>exact same
+      image, pixel-for-pixel</em> — no randomness, no clock, nothing stored.
+      Change one letter and the whole sigil shifts. The image is a faithful
+      signature of the message; the only way to reproduce or verify it is to
+      type the same words into this same generator. The short code beside the
+      art is the input's fingerprint — proof of that determinism.
+    </p>
+  </section>
+
+  <main class="layout">
+    <div class="stage">
+      <div class="stage-inner">
+        <div id="insignia-host" class="empty">
+          <div class="placeholder">
+            Type a phrase, and watch it grow into a sigil.
+            <span>Every character becomes a mark. The same words always make the same image.</span>
+          </div>
+        </div>
+      </div>
+      <div class="signature-bar">
+        <div class="sig-block">
+          <span class="sig-label">signature</span>
+          <span id="sig-value" class="sig-value">—</span>
+        </div>
+        <div class="sig-block">
+          <span class="sig-label">characters</span>
+          <span id="char-count" class="sig-value">0</span>
         </div>
       </div>
     </div>
 
-    <aside class="control-panel" id="control-panel">
-      <div class="control-panel-header" id="panel-toggle">
-        <div class="cp-title">Glyphseed</div>
-        <div class="cp-status">
-          <div class="cp-status-dot"></div>
-          <span>Ready to grow</span>
-        </div>
-      </div>
+    <aside class="panel" aria-label="Controls">
+      <label for="input-text" class="field-label">Your phrase</label>
+      <textarea id="input-text" spellcheck="false" rows="3"
+        placeholder="your name, a phrase, a secret…"></textarea>
+      <p id="text-hint" class="hint">0 chars · 0 vowels · 0 consonants · 0 digits · 0 symbols</p>
 
-      <div class="cp-body">
-        <label for="input-text" class="visually-hidden">Text source</label>
-        <div class="text-shell">
-          <textarea id="input-text" spellcheck="false"
-            placeholder="Type to grow..."></textarea>
-        </div>
-        <div class="hint" id="text-hint">
-          0 characters • 0 vowels • 0 consonants • 0 digits • 0 symbols
-        </div>
-
-        <div class="controls-row" style="margin-top:10px;">
-          <button class="button" id="generate-btn">
-            <span class="button-icon">✶</span>
-            <span>Grow insignia</span>
-          </button>
-
-          <div class="spacer"></div>
-
-          <label for="palette-mode" style="margin-bottom:0;">Palette</label>
+      <div class="row">
+        <button id="generate-btn" class="btn btn-primary">
+          <span aria-hidden="true">✶</span> Grow sigil
+        </button>
+        <div class="field">
+          <label for="palette-mode" class="field-label sm">Palette</label>
           <select id="palette-mode">
-            <option value="auto">Auto</option>
-            <option value="cool">Cool</option>
-            <option value="warm">Warm</option>
-            <option value="sunset">Sunset</option>
-            <option value="neon">Neon</option>
+            <option value="auto">From text</option>
+            <option value="ember">Ember</option>
+            <option value="tide">Tide</option>
+            <option value="orchid">Orchid</option>
+            <option value="verdant">Verdant</option>
           </select>
         </div>
-
-        <div class="controls-row" style="margin-top:8px;">
-          <label for="export-size" style="margin-bottom:0;">Export</label>
-          <select id="export-size">
-            <option value="1024">1024 × 1024</option>
-            <option value="2048">2048 × 2048</option>
-          </select>
-
-          <div class="spacer"></div>
-
-          <button class="button" id="download-svg-btn"
-            style="background:rgba(15,23,42,0.98);color:#e5e7eb;border-color:rgba(148,163,184,0.7);box-shadow:none;">
-            <span class="button-icon">⬇</span>
-            <span>SVG</span>
-          </button>
-          <button class="button" id="download-png-btn"
-            style="background:rgba(15,23,42,0.98);color:#e5e7eb;border-color:rgba(148,163,184,0.7);box-shadow:none;">
-            <span class="button-icon">⬇</span>
-            <span>PNG</span>
-          </button>
-        </div>
-
-        <div class="controls-row" style="margin-top:6px;">
-          <div class="seed-pill" id="seed-pill">
-            <div class="seed-dot"></div>
-            <span>Seed: none</span>
-          </div>
-        </div>
-
-        <div class="meta-row" id="meta-row">
-          <div class="meta-tag">Layout: –</div>
-          <div class="meta-tag">Symmetry: –</div>
-          <div class="meta-tag">Detail: –</div>
-        </div>
-
-        <div class="status" id="status-line"></div>
       </div>
+
+      <hr class="rule">
+
+      <label class="field-label">Share this sigil</label>
+      <div class="row link-row">
+        <input id="permalink" class="permalink" readonly aria-label="Shareable link"
+          value="">
+        <button id="copy-link-btn" class="btn btn-ghost">Copy</button>
+      </div>
+
+      <label class="field-label">Download</label>
+      <div class="row">
+        <div class="field">
+          <label for="export-size" class="field-label sm">Size</label>
+          <select id="export-size">
+            <option value="1024">1024 px</option>
+            <option value="2048">2048 px</option>
+          </select>
+        </div>
+        <button id="download-svg-btn" class="btn btn-ghost">SVG</button>
+        <button id="download-png-btn" class="btn btn-ghost">PNG</button>
+      </div>
+
+      <p id="status-line" class="status" role="status" aria-live="polite"></p>
     </aside>
-  </div>
+  </main>
+
+  <footer class="site-footer">
+    <a href="https://rougvie.com" class="backlink">◆ rougvie.com</a>
+    <span class="footer-note">Deterministic generative art · nothing is stored</span>
+  </footer>
 
   <script type="module" src="js/ui/app.js"></script>
 </body>

@@ -1,196 +1,146 @@
 // /js/render/svg-renderer.js
-// version: 2025-12-01 v0.3
+// version: 2026-06-09 v1.0
+//
+// Pure rendering of a scene { defs, elements } into SVG. The element schema
+// is produced by scene-builder.js. Two entry points:
+//   - renderScene(host, scene, opts)  -> live DOM render with staggered reveal
+//   - sceneToSVGString(scene)         -> deterministic standalone SVG string
+//
+// IMPORTANT: sceneToSVGString must be a pure function of the scene so that
+// the same input text yields a byte-identical SVG (the cipher guarantee is
+// verified against this string).
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
+const VIEW = 1000;
 
-// Create a DOM node from an element descriptor
-export function createNodeForElement(el, svgNS = SVG_NS) {
+function buildDefs(defs) {
+  const g = defs.bgGradient;
+  return [
+    `<radialGradient id="bgGradient" cx="50%" cy="46%" r="72%">`,
+    `<stop offset="0%" stop-color="${g.inner}"></stop>`,
+    `<stop offset="100%" stop-color="${g.outer}"></stop>`,
+    `</radialGradient>`,
+    `<filter id="glow" x="-60%" y="-60%" width="220%" height="220%">`,
+    `<feGaussianBlur stdDeviation="4" result="b"></feGaussianBlur>`,
+    `<feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>`,
+    `</filter>`
+  ].join("");
+}
+
+function elToString(el) {
+  const glow = el.glow ? ' filter="url(#glow)"' : "";
+  switch (el.type) {
+    case "circle": {
+      const stroke = el.stroke
+        ? ` stroke="${el.stroke}" stroke-width="${el.strokeWidth}"` +
+          (el.dash ? ` stroke-dasharray="${(el.r * 0.18).toFixed(1)} ${(el.r * 0.12).toFixed(1)}"` : "")
+        : "";
+      return `<circle cx="${el.cx}" cy="${el.cy}" r="${el.r}" fill="${el.fill}"${stroke} opacity="${el.opacity}"${glow}></circle>`;
+    }
+    case "line":
+      return `<line x1="${el.x1}" y1="${el.y1}" x2="${el.x2}" y2="${el.y2}" stroke="${el.stroke}" stroke-width="${el.strokeWidth}" stroke-linecap="round" opacity="${el.opacity}"${glow}></line>`;
+    case "polygon": {
+      const stroke = el.stroke ? ` stroke="${el.stroke}" stroke-width="${el.strokeWidth}"` : "";
+      const lj = el.stroke ? ` stroke-linejoin="round"` : "";
+      return `<polygon points="${el.points}" fill="${el.fill}"${stroke}${lj} opacity="${el.opacity}"${glow}></polygon>`;
+    }
+    case "path":
+      return `<path d="${el.d}" stroke="${el.stroke}" stroke-width="${el.strokeWidth}" fill="${el.fill || "none"}" stroke-linecap="round" stroke-linejoin="round" opacity="${el.opacity}"${glow}></path>`;
+    default:
+      return "";
+  }
+}
+
+// Deterministic standalone SVG string (used for export + determinism test).
+export function sceneToSVGString(scene, size = VIEW) {
+  const body = scene.elements.map(elToString).join("");
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEW} ${VIEW}" width="${size}" height="${size}">`,
+    `<defs>${buildDefs(scene.defs)}</defs>`,
+    `<rect width="${VIEW}" height="${VIEW}" fill="url(#bgGradient)"></rect>`,
+    body,
+    `</svg>`
+  ].join("");
+}
+
+function createNode(el) {
   let node;
-  if (el.type === "ring") {
-    node = document.createElementNS(svgNS, "circle");
-    node.setAttribute("cx", el.cx);
-    node.setAttribute("cy", el.cy);
-    node.setAttribute("r", el.r);
-    node.setAttribute("stroke", el.stroke);
-    node.setAttribute("stroke-width", el.strokeWidth);
-    node.setAttribute("fill", "none");
-    node.setAttribute("opacity", el.opacity);
-    if (el.blur) node.setAttribute("filter", "url(#softBlur)");
+  if (el.type === "circle") {
+    node = document.createElementNS(SVG_NS, "circle");
+    node.setAttribute("cx", el.cx); node.setAttribute("cy", el.cy);
+    node.setAttribute("r", el.r); node.setAttribute("fill", el.fill);
+    if (el.stroke) {
+      node.setAttribute("stroke", el.stroke);
+      node.setAttribute("stroke-width", el.strokeWidth);
+      if (el.dash) node.setAttribute("stroke-dasharray", `${(el.r * 0.18).toFixed(1)} ${(el.r * 0.12).toFixed(1)}`);
+    }
   } else if (el.type === "line") {
-    node = document.createElementNS(svgNS, "line");
-    node.setAttribute("x1", el.x1);
-    node.setAttribute("y1", el.y1);
-    node.setAttribute("x2", el.x2);
-    node.setAttribute("y2", el.y2);
+    node = document.createElementNS(SVG_NS, "line");
+    node.setAttribute("x1", el.x1); node.setAttribute("y1", el.y1);
+    node.setAttribute("x2", el.x2); node.setAttribute("y2", el.y2);
     node.setAttribute("stroke", el.stroke);
     node.setAttribute("stroke-width", el.strokeWidth);
     node.setAttribute("stroke-linecap", "round");
-    node.setAttribute("opacity", el.opacity);
-  } else if (el.type === "circle") {
-    node = document.createElementNS(svgNS, "circle");
-    node.setAttribute("cx", el.cx);
-    node.setAttribute("cy", el.cy);
-    node.setAttribute("r", el.r);
+  } else if (el.type === "polygon") {
+    node = document.createElementNS(SVG_NS, "polygon");
+    node.setAttribute("points", el.points);
     node.setAttribute("fill", el.fill);
-    node.setAttribute("opacity", el.opacity);
-    if (el.blur) node.setAttribute("filter", "url(#softBlur)");
+    if (el.stroke) {
+      node.setAttribute("stroke", el.stroke);
+      node.setAttribute("stroke-width", el.strokeWidth);
+      node.setAttribute("stroke-linejoin", "round");
+    }
   } else if (el.type === "path") {
-    node = document.createElementNS(svgNS, "path");
+    node = document.createElementNS(SVG_NS, "path");
     node.setAttribute("d", el.d);
     node.setAttribute("stroke", el.stroke);
     node.setAttribute("stroke-width", el.strokeWidth);
     node.setAttribute("fill", el.fill || "none");
-    node.setAttribute("opacity", el.opacity);
     node.setAttribute("stroke-linecap", "round");
     node.setAttribute("stroke-linejoin", "round");
-  } else if (el.type === "polygon") {
-    node = document.createElementNS(svgNS, "polygon");
-    node.setAttribute("points", el.points);
-    node.setAttribute("fill", el.fill);
-    node.setAttribute("opacity", el.opacity);
   }
-  if (node) {
-    node.classList.add("insig-piece");
-    if (el.id) node.dataset.id = el.id;
-    if (el.layer) node.dataset.layer = el.layer;
-  }
+  if (!node) return null;
+  node.setAttribute("opacity", el.opacity);
+  if (el.glow) node.setAttribute("filter", "url(#glow)");
+  node.classList.add("insig-piece");
+  if (el.id) node.dataset.id = el.id;
   return node;
 }
 
-// Renders a scene description into SVG with an organic, layered reveal.
-export function renderSceneOrganic(hostElement, elements, options = {}) {
-  const order = options.layerOrder || [
-    "core-bg",
-    "rings",
-    "branches",
-    "orbits",
-    "spokes",
-    "curves",
-    "petals",
-    "accents",
-    "center"
-  ];
+// Live render with a staggered "growth" reveal in growth order. Respects
+// prefers-reduced-motion (renders instantly, no stagger).
+export function renderScene(host, scene, opts = {}) {
+  const reduce = window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const totalDuration = options.totalDuration || 3000;
-  const baseGroupDelay = totalDuration / order.length / 1.4;
-  const pieceStagger = options.pieceStagger || 30;
-
-  hostElement.classList.remove("empty");
-  hostElement.innerHTML = "";
+  host.classList.remove("empty");
+  host.innerHTML = "";
 
   const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("viewBox", "0 0 1000 1000");
-  svg.setAttribute("width", "1000");
-  svg.setAttribute("height", "1000");
+  svg.setAttribute("viewBox", `0 0 ${VIEW} ${VIEW}`);
+  svg.setAttribute("class", "insig-svg");
+  svg.innerHTML = `<defs>${buildDefs(scene.defs)}</defs>` +
+    `<rect width="${VIEW}" height="${VIEW}" fill="url(#bgGradient)"></rect>`;
+  host.appendChild(svg);
 
-  const defsNode = document.createElementNS(SVG_NS, "defs");
-  svg.appendChild(defsNode);
+  const stagger = opts.stagger != null ? opts.stagger : 14;
+  const els = scene.elements.filter(e => e.layer !== "bg");
 
-  const nonDefs = [];
-
-  for (const el of elements) {
-    if (el.type === "defs") {
-      if (el.radialGradient) {
-        const g = el.radialGradient;
-        const grad = document.createElementNS(SVG_NS, "radialGradient");
-        grad.setAttribute("id", g.id);
-        grad.setAttribute("cx", g.cx);
-        grad.setAttribute("cy", g.cy);
-        grad.setAttribute("r", g.r);
-        grad.setAttribute("fx", g.fx);
-        grad.setAttribute("fy", g.fy);
-        for (const st of g.stops) {
-          const stop = document.createElementNS(SVG_NS, "stop");
-          stop.setAttribute("offset", st.offset);
-          stop.setAttribute("stop-color", st.color);
-          stop.setAttribute("stop-opacity", st.opacity);
-          grad.appendChild(stop);
-        }
-        defsNode.appendChild(grad);
-      }
-      if (el.blurFilter) {
-        const f = el.blurFilter;
-        const filter = document.createElementNS(SVG_NS, "filter");
-        filter.setAttribute("id", f.id);
-        filter.setAttribute("x", "-20%");
-        filter.setAttribute("y", "-20%");
-        filter.setAttribute("width", "140%");
-        filter.setAttribute("height", "140%");
-        const fe = document.createElementNS(SVG_NS, "feGaussianBlur");
-        fe.setAttribute("stdDeviation", String(f.stdDeviation));
-        filter.appendChild(fe);
-        defsNode.appendChild(filter);
-      }
-    } else {
-      nonDefs.push(el);
+  if (reduce || stagger === 0) {
+    for (const el of els) {
+      const n = createNode(el);
+      if (n) { n.classList.add("visible"); svg.appendChild(n); }
     }
+    return;
   }
 
-  hostElement.appendChild(svg);
-
-  let baseDelay = 0;
-
-  order.forEach(layerName => {
-    const layerEls = nonDefs.filter(el => el.layer === layerName);
-    if (!layerEls.length) return;
-
-    layerEls.forEach((el, idx) => {
-      const delay = baseDelay + idx * pieceStagger;
-      setTimeout(() => {
-        const node = createNodeForElement(el);
-        if (!node) return;
-        svg.appendChild(node);
-        requestAnimationFrame(() => {
-          node.classList.add("visible");
-        });
-      }, delay);
-    });
-
-    baseDelay += baseGroupDelay;
+  els.forEach((el, idx) => {
+    setTimeout(() => {
+      if (!svg.isConnected) return;
+      const n = createNode(el);
+      if (!n) return;
+      svg.appendChild(n);
+      requestAnimationFrame(() => n.classList.add("visible"));
+    }, idx * stagger);
   });
-}
-
-// Produces an SVG string for export (no organic reveal).
-export function sceneToSVGString(elements) {
-  const viewBox = "0 0 1000 1000";
-  let defs = "";
-  let body = "";
-
-  for (const el of elements) {
-    if (el.type === "defs") {
-      if (el.radialGradient) {
-        const g = el.radialGradient;
-        defs += `<radialGradient id="${g.id}" cx="${g.cx}" cy="${g.cy}" r="${g.r}" fx="${g.fx}" fy="${g.fy}">` +
-          g.stops.map(st =>
-            `<stop offset="${st.offset}" stop-color="${st.color}" stop-opacity="${st.opacity}"></stop>`
-          ).join("") +
-          `</radialGradient>`;
-      }
-      if (el.blurFilter) {
-        const f = el.blurFilter;
-        defs += `<filter id="${f.id}" x="-20%" y="-20%" width="140%" height="140%">` +
-          `<feGaussianBlur stdDeviation="${f.stdDeviation}"></feGaussianBlur>` +
-          `</filter>`;
-      }
-    } else if (el.type === "ring") {
-      const filterAttr = el.blur ? ' filter="url(#softBlur)"' : "";
-      body += `<circle cx="${el.cx}" cy="${el.cy}" r="${el.r}" stroke="${el.stroke}" stroke-width="${el.strokeWidth}" fill="none" opacity="${el.opacity}"${filterAttr}></circle>`;
-    } else if (el.type === "line") {
-      body += `<line x1="${el.x1}" y1="${el.y1}" x2="${el.x2}" y2="${el.y2}" stroke="${el.stroke}" stroke-width="${el.strokeWidth}" stroke-linecap="round" opacity="${el.opacity}"></line>`;
-    } else if (el.type === "circle") {
-      const filterAttr = el.blur ? ' filter="url(#softBlur)"' : "";
-      body += `<circle cx="${el.cx}" cy="${el.cy}" r="${el.r}" fill="${el.fill}" opacity="${el.opacity}"${filterAttr}></circle>`;
-    } else if (el.type === "path") {
-      body += `<path d="${el.d}" stroke="${el.stroke}" stroke-width="${el.strokeWidth}" fill="${el.fill || "none"}" opacity="${el.opacity}" stroke-linecap="round" stroke-linejoin="round"></path>`;
-    } else if (el.type === "polygon") {
-      body += `<polygon points="${el.points}" fill="${el.fill}" opacity="${el.opacity}"></polygon>`;
-    }
-  }
-
-  return [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="1000" height="1000">`,
-    `<defs>${defs}</defs>`,
-    body,
-    `</svg>`
-  ].join("");
 }
